@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="./manifest.json">
+<meta charset="UTF-8">
+<meta name="theme-color" content="#047857">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Expeniq: Expense Tracker</title>
+<style>
+:root{--primary:#047857;--bg:#f8fafc;--card:#fff;--text:#1e293b;--income:#16a34a;--expense:#dc2626;--border:#e2e8f0;--loan:#d97706}
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{background:var(--bg);color:var(--text);padding-bottom:0}
+#loginScreen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;justify-content:center;align-items:center;padding:20px}
+.login-box{background:var(--card);padding:30px 20px;border-radius:16px;width:100%;max-width:360px;box-shadow:0 4px 12px rgba(0,0,0,.1);text-align:center;border:1px solid var(--border)}
+.login-box h2{margin-bottom:15px;color:var(--primary)}
+.login-box input,.login-box select{width:100%;padding:12px;margin-bottom:12px;border:1px solid var(--border);border-radius:10px;font-size:1rem;background:#f8fafc;outline:none}
+.login-box button{width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer}
+.app-status-msg{font-size:.85rem;margin-bottom:12px;font-weight:600;display:none;padding:10px;border-radius:8px;text-align:center;animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+#statusMsg{font-size:.85rem;margin-bottom:10px;font-weight:600;min-height:20px;display:none;padding:6px;border-radius:6px}
+header{background:var(--primary);color:#fff;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 4px rgba(0,0,0,.1);position:sticky;top:0;z-index:10}
+header h1{font-size:.95rem;font-weight:700}
+.header-controls{display:flex;align-items:center;gap:4px}
+.header-select{background:rgba(0,0,0,.3)!important;border:1px solid rgba(255,255,255,.4)!important;color:#fff!important;padding:4px 5px;border-radius:6px;font-size:.7rem;font-weight:600;cursor:pointer;outline:none;width:auto}
+.header-select option{background:#1e293b;color:#fff}
+.action-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:4px 5px;border-radius:6px;font-size:.7rem;font-weight:600;cursor:pointer}
+.container{max-width:500px;margin:0 auto;padding:16px 16px 0}
+.card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);margin-bottom:16px;border:1px solid var(--border)}
+.balance-title{font-size:.8rem;color:#64748b;text-transform:uppercase}
+.balance-amount{font-size:2rem;font-weight:800}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.sub-box{background:#f8fafc;padding:10px;border-radius:10px;border:1px solid var(--border)}
+.sub-box span{font-size:.75rem;color:#64748b;display:block}
+.sub-box b{font-size:.95rem}
+.tab-bar{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:4px;margin-bottom:14px}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{flex:1;min-width:max-content;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:.85rem;font-weight:600;color:#64748b;cursor:pointer;transition:all .2s ease}
+.tab-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 2px 6px rgba(4,120,87,.3)}
+.tab-section{display:none}
+.tab-section.active{display:block;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.section-title{font-size:1rem;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.form-group{margin-bottom:10px}
+input,select{width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:.95rem;background:#f8fafc;outline:none}
+input:focus,select:focus{border-color:var(--primary);background:#fff}
+.btn-submit{width:100%;background:var(--primary);color:#fff;border:none;padding:12px;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;margin-top:6px}
+.item-list{list-style:none;max-height:260px;overflow-y:auto}
+.item-row{background:#fff;padding:10px 12px;border-radius:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px;border:1px solid var(--border);font-size:.9rem}
+.item-row.done{opacity:.55;background:#f1f5f9}
+.item-row.done b{text-decoration:line-through}
+.del-btn,.mini-btn{border:none;padding:4px 8px;border-radius:6px;cursor:pointer}
+.del-btn{background:#fee2e2;color:#dc2626}
+.mini-btn{background:#e0e7ff}
+.due-banner{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;padding:10px 12px;border-radius:12px;margin-bottom:14px;font-size:.85rem;font-weight:600}
+.bar-row{margin-bottom:8px;font-size:.82rem}
+.bar-row .bar{height:10px;border-radius:6px;background:var(--expense);margin-top:3px}
+.trend{display:flex;gap:6px;align-items:flex-end;height:120px}
+.trend>div{flex:1;text-align:center;font-size:.65rem;color:#64748b}
+.trend .pair{display:flex;gap:2px;align-items:flex-end;height:100px;justify-content:center}
+.trend .pair i{display:block;width:40%;border-radius:4px 4px 0 0;min-height:2px}
+#customModal,#confirmModal,#balModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;display:none;justify-content:center;align-items:center;padding:20px}
+.modal-content{background:linear-gradient(135deg,#fff,#f1f5f9);padding:25px 20px;border-radius:20px;width:100%;max-width:320px;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,.2);border:2px solid #ef4444;animation:popIn .3s ease}
+@keyframes popIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+.modal-buttons{display:flex;gap:10px;margin-top:20px}
+.modal-btn-yes{flex:1;background:#dc2626;color:#fff;border:none;padding:10px;border-radius:8px;font-weight:600;cursor:pointer}
+.modal-btn-no{flex:1;background:#e2e8f0;color:#1e293b;border:none;padding:10px;border-radius:8px;font-weight:600;cursor:pointer}
+#privacyModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.55);z-index:10001;display:none;justify-content:center;align-items:center;padding:12px}
+.priv-box{background:var(--card);border-radius:16px;width:100%;max-width:480px;max-height:92vh;display:flex;flex-direction:column;border:1px solid var(--border);box-shadow:0 10px 25px rgba(0,0,0,.25)}
+.priv-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);font-weight:700;color:var(--primary)}
+.priv-head button{background:#e2e8f0;border:none;border-radius:8px;padding:6px 12px;font-weight:600;cursor:pointer}
+.priv-body{padding:14px 16px 18px;overflow-y:auto;font-size:.88rem;line-height:1.55}
+.priv-body h4{margin:14px 0 4px;font-size:.92rem}
+.priv-body p,.priv-body li{color:#334155}
+.priv-body ul{padding-left:18px}
+.priv-body .upd{font-size:.75rem;color:#64748b}
+.priv-link{text-align:center;font-size:.8rem;color:var(--primary);text-decoration:underline;cursor:pointer;padding:6px 0 28px}
+header{flex-wrap:wrap;gap:6px 8px}
+header h1{white-space:nowrap}
+.header-controls{flex-wrap:nowrap;gap:3px;max-width:100%}
+.header-select{padding:4px 2px;font-size:.65rem;max-width:84px}
+.action-btn{padding:4px 4px}
+body.dark{--bg:#0f172a;--card:#1e293b;--text:#e2e8f0;--border:#334155;color-scheme:dark}
+body.dark input,body.dark select,body.dark textarea{background:#0f172a;color:var(--text)}
+body.dark input:focus,body.dark select:focus,body.dark textarea:focus{background:#1e293b}
+body.dark #importText{background:#0f172a!important;color:var(--text)!important}
+body.dark .login-box input,body.dark .login-box select{background:#0f172a}
+body.dark .sub-box{background:#0f172a}
+body.dark .item-row{background:#1e293b}
+body.dark .item-row.done{background:#162032}
+body.dark .balance-title,body.dark .sub-box span,body.dark .tab-btn,body.dark .trend>div{color:#94a3b8}
+body.dark .tab-btn.active{color:#fff}
+body.dark [style*="color:#64748b"]{color:#94a3b8!important}
+body.dark .modal-content{background:#1e293b}
+body.dark .modal-btn-no{background:#334155;color:var(--text)}
+body.dark .mini-btn{background:#3730a3;color:#e0e7ff}
+body.dark .del-btn{background:#7f1d1d;color:#fecaca}
+body.dark .due-banner{background:#422006;border-color:#a16207;color:#fde68a}
+body.dark .priv-body p,body.dark .priv-body li{color:#cbd5e1}
+body.dark .priv-head button{background:#334155;color:var(--text)}
+body.dark .login-box h2{color:#34d399}
+
+.sum-box{border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:.88rem;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sum-box b{font-size:1rem;white-space:nowrap}
+.sum-box small{font-weight:400;opacity:.85}
+.sum-blue{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}
+.sum-yellow{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+.sum-green{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.sum-cash{background:#ecfeff;color:#155e75;border:1px solid #a5f3fc}
+body.dark .sum-cash{background:#083344;color:#67e8f9;border-color:#155e75}
+.fld-label{font-size:.78rem;color:#64748b;display:block;margin-bottom:4px;font-weight:600}
+body.dark .sum-blue{background:#064e3b;color:#6ee7b7;border-color:#047857}
+body.dark .sum-yellow{background:#422006;color:#fde68a;border-color:#a16207}
+body.dark .sum-green{background:#052e16;color:#86efac;border-color:#166534}
+body.dark .fld-label{color:#94a3b8}
+
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;min-width:104px;text-align:left;cursor:pointer;border:2px solid var(--c);background:var(--t);color:var(--c);border-radius:12px;padding:8px 12px;font-weight:700;font-size:.85rem;line-height:1.25}
+.chip small{display:block;font-weight:600;font-size:.74rem;margin-top:2px;opacity:.9}
+.chip.sel{background:var(--c);color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.chip-new{--c:#64748b;--t:transparent;border-style:dashed;min-width:76px;text-align:center}
+.ct-cash{--c:#16a34a;--t:#dcfce7}.ct-bank{--c:#047857;--t:#d1fae5}.ct-wallet{--c:#7c3aed;--t:#ede9fe}.ct-card{--c:#dc2626;--t:#fee2e2}.ct-other{--c:#475569;--t:#e2e8f0}
+.mchip{flex:0 0 auto;cursor:pointer;border:1px solid var(--border);background:var(--card);color:#64748b;border-radius:999px;padding:6px 14px;font-weight:600;font-size:.8rem}
+.mchip.sel{background:var(--primary);border-color:var(--primary);color:#fff}
+.ct-upi{--c:#7c3aed;--t:#ede9fe}
+.ct-debit{--c:#0891b2;--t:#cffafe}
+.sum-upi{background:#f5f3ff;color:#5b21b6;border:1px solid #ddd6fe}
+.sum-card{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+body.dark .sum-upi{background:#2e1065;color:#c4b5fd;border-color:#5b21b6}
+body.dark .sum-card{background:#450a0a;color:#fca5a5;border-color:#991b1b}
+body.dark .chip:not(.sel){background:#0f172a}
+body.dark .mchip:not(.sel){color:#94a3b8}
+.t-income{color:#16a34a!important;border:2px solid #16a34a!important;background:#f0fdf4!important;font-weight:700}
+.t-expense{color:#dc2626!important;border:2px solid #dc2626!important;background:#fef2f2!important;font-weight:700}
+body.dark .t-income{background:#052e16!important}
+body.dark .t-expense{background:#450a0a!important}
+.chips.wrap{flex-wrap:wrap;overflow:visible;justify-content:center}
+#settleModal,#pickModal,#cashModal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:10000;display:none;justify-content:center;align-items:center;padding:20px}
+#settleModal .modal-content,#pickModal .modal-content,#cashModal .modal-content{max-height:88vh;overflow-y:auto;max-width:360px}
+.acc-hint{display:none;font-size:.76rem;line-height:1.4;color:#5b21b6;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:7px 10px;margin-top:2px}
+body.dark .acc-hint{background:#2e1065;color:#c4b5fd;border-color:#5b21b6}
+</style>
+</head>
+<body>
+
+<div id="customModal"><div class="modal-content">
+<div style="font-size:40px;margin-bottom:10px">⚠️</div>
+<h3 style="color:#dc2626;margin-bottom:8px">Delete Item?</h3>
+<p id="delText" style="font-size:.9rem;color:#64748b;margin-bottom:15px">Are you sure you want to remove this? This action cannot be undone.</p>
+<div class="modal-buttons"><button class="modal-btn-no" onclick="closeModal(false)">Cancel</button><button class="modal-btn-yes" onclick="closeModal(true)">Yes, Delete</button></div>
+</div></div>
+
+<div id="cashModal"><div class="modal-content" style="border-color:#0891b2">
+<h3 id="cashTitle" style="color:#0891b2;margin-bottom:6px"></h3>
+<p id="cashSub" style="font-size:.8rem;color:#64748b;margin-bottom:10px;line-height:1.4"></p>
+<div id="cashErr" class="app-status-msg"></div>
+<div id="cashChips" class="chips wrap"></div>
+<input type="number" id="cashAmt" step="any" inputmode="decimal" placeholder="Amount" style="margin-top:6px">
+<div class="modal-buttons"><button class="modal-btn-no" id="cashCancel" onclick="cashClose(false)">Cancel</button><button class="modal-btn-yes" id="cashOk" style="background:#0891b2" onclick="cashClose(true)">Confirm</button></div>
+</div></div>
+
+<div id="pickModal"><div class="modal-content" style="border-color:#7c3aed">
+<h3 id="pickTitle" style="color:#7c3aed;margin-bottom:12px"></h3>
+<div id="pickChips" class="chips wrap"></div>
+<div class="modal-buttons"><button class="modal-btn-no" id="pickCancel" onclick="closePick()">Cancel</button></div>
+</div></div>
+
+<div id="settleModal"><div class="modal-content" style="border-color:#16a34a">
+<h3 id="settleTitle" style="color:#16a34a;margin-bottom:6px"></h3>
+<p id="settleSub" style="font-size:.9rem;font-weight:600;margin-bottom:12px"></p>
+<div id="settleErr" class="app-status-msg"></div>
+<input type="number" id="settleAmt" step="any" inputmode="decimal" placeholder="Amount" style="display:none;margin-bottom:10px">
+<div id="settleChips" class="chips wrap"></div>
+<div class="modal-buttons"><button class="modal-btn-no" id="settleCancel" onclick="settleClose(false)">Cancel</button><button class="modal-btn-yes" id="settleOk" style="background:#16a34a" onclick="settleClose(true)">Confirm</button></div>
+</div></div>
+
+<div id="balModal"><div class="modal-content" style="border-color:#047857">
+<h3 id="balTitle" style="color:#047857;margin-bottom:12px">Edit Balance</h3>
+<div id="balErr" class="app-status-msg"></div>
+<input type="text" id="balName" style="margin-bottom:10px">
+<input type="number" id="balValue" step="any" inputmode="decimal">
+<div class="modal-buttons"><button class="modal-btn-no" id="balCancel" onclick="balClose(false)">Cancel</button><button class="modal-btn-yes" id="balSave" style="background:#047857" onclick="balClose(true)">Save</button></div>
+</div></div>
+
+<div id="confirmModal"><div class="modal-content" style="border-color:#047857">
+<div style="font-size:40px;margin-bottom:10px">⚠️</div>
+<h3 style="color:#047857;margin-bottom:8px">Please Confirm</h3>
+<p id="confirmText" style="font-size:.9rem;color:#64748b;margin-bottom:15px"></p>
+<div class="modal-buttons"><button class="modal-btn-no" onclick="confirmClose(false)">Cancel</button><button class="modal-btn-yes" style="background:#047857" onclick="confirmClose(true)">Continue</button></div>
+</div></div>
+
+<div id="privacyModal"><div class="priv-box">
+<div class="priv-head"><span id="privTitle">🔒 Privacy Policy</span><button id="privClose" onclick="closePrivacy()">Close</button></div>
+<div class="priv-body" id="privBody"></div>
+</div></div>
+
+<div id="loginScreen"><div class="login-box">
+<h2 id="loginTitle">Expeniq Secure</h2>
+<p id="loginDesc" style="font-size:.85rem;color:#64748b;margin-bottom:12px">Enter your 4-digit PIN</p>
+<div id="statusMsg"></div>
+<input type="password" id="pinInput" placeholder="Enter 4-digit PIN" maxlength="4" inputmode="numeric">
+<div id="confirmPinDiv" style="display:none;position:relative">
+<input type="password" id="confirmPinInput" placeholder="Confirm 4-digit PIN" maxlength="4" inputmode="numeric" style="padding-right:40px">
+<span onclick="togglePinVisibility('confirmPinInput','confirmEyeIcon')" style="position:absolute;right:12px;top:38%;transform:translateY(-50%);cursor:pointer;font-size:18px" id="confirmEyeIcon">👁️‍🗨️</span>
+</div>
+<div id="setupSecQDiv" style="display:none">
+<select id="secQuestion" style="border:2px solid #6366f1;border-radius:10px;font-weight:600;background:linear-gradient(135deg,#e0e7ff 0%,#fae8ff 100%);color:#1e1b4b">
+<option value="What is your favorite food?">🍔 What is your favorite food?</option>
+<option value="What is your favorite movie?">🎬 What is your favorite movie?</option>
+<option value="Who is your favorite sports player?">⚽ Who is your favorite sports player?</option>
+<option value="What was the name of your first school?">🏫 What was the name of your first school?</option>
+<option value="What was the name of your first pet?">🐾 What was the name of your first pet?</option>
+<option value="In which city were you born?">🏙️ In which city were you born?</option>
+</select>
+<input type="text" id="secAnswerInput" placeholder="Enter your Secret Answer">
+</div>
+<button id="loginBtn" onclick="handleLogin()">Login / Unlock</button>
+<p id="forgotPinLink" style="font-size:.8rem;color:var(--primary);margin-top:10px;cursor:pointer;text-decoration:underline" onclick="showForgotPin()">Forgot PIN?</p>
+<p style="font-size:.78rem;color:#64748b;margin-top:10px;cursor:pointer;text-decoration:underline" onclick="openPrivacy()" id="privLinkLogin">🔒 Privacy Policy</p>
+</div></div>
+
+<header>
+<h1 id="appTitle">Expeniq</h1>
+<div class="header-controls">
+<select id="langSelect" class="header-select" onchange="changeLanguage()">
+<option value="en">English</option><option value="ml">മലയാളം</option><option value="hi">हिन्दी</option><option value="ta">தமிழ்</option><option value="ar">العربية</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option>
+</select>
+<select id="currencySelect" class="header-select" onchange="updateCurrency()">
+<option value="₹">₹ INR</option><option value="$">$ USD</option><option value="€">€ EUR</option><option value="£">£ GBP</option><option value="AED ">AED</option><option value="SAR ">SAR</option><option value="QAR ">QAR</option>
+</select>
+<button class="action-btn" id="themeBtn" title="Dark mode" aria-label="Dark mode" onclick="toggleTheme()">🌙</button>
+<button class="action-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
+<button class="action-btn" id="privBtn" title="Privacy Policy" aria-label="Privacy Policy" onclick="openPrivacy()">🔒</button>
+<button class="action-btn" onclick="handleLogout()">Lock</button>
+</div>
+</header>
+
+<div class="container">
+<div class="card" style="text-align:center">
+<div class="balance-title" id="lblNetBalance">Total Net Balance</div>
+<div style="display:flex;justify-content:center;align-items:center;gap:10px;margin:6px 0 12px">
+<div class="balance-amount" id="totalNetBalance">₹0.00</div>
+<span id="toggle-eye" onclick="toggleBalance()" style="cursor:pointer;font-size:22px">👁️</span>
+</div>
+<div class="grid-2" style="margin-bottom:0">
+<div class="sub-box"><span id="lblIncome">Total Income</span><b id="totalIncomeDisplay" style="color:var(--income)">₹0.00</b></div>
+<div class="sub-box"><span id="lblExpense">Total Expense</span><b id="totalExpenseDisplay" style="color:var(--expense)">₹0.00</b></div>
+</div>
+</div>
+
+<div id="dueBanner" class="due-banner" style="display:none"></div>
+
+<div class="tab-bar">
+<button class="tab-btn active" id="tabBtnTxn" onclick="switchTab('tabTxn',this)">💸 Daily</button>
+<button class="tab-btn" id="tabBtnBank" onclick="switchTab('tabBank',this)">🏦 Banks</button>
+<button class="tab-btn" id="tabBtnLoan" onclick="switchTab('tabLoan',this)">📋 Loans</button>
+<button class="tab-btn" id="tabBtnRec" onclick="switchTab('tabRec',this)">🔄 Pending</button>
+<button class="tab-btn" id="tabBtnRep" onclick="switchTab('tabRep',this)">📊 Report</button>
+</div>
+
+<div id="tabTxn" class="card tab-section active">
+<div class="section-title"><span id="lblTxnTitle">💸 Daily Income & Expense</span></div>
+<div id="sumDaily" class="sum-box sum-blue"></div>
+<div id="cashBox" class="sum-box sum-cash"></div>
+<div class="grid-2" style="margin-bottom:12px"><button class="btn-submit" id="btnAtm" style="background:#0891b2;margin:0" onclick="openCash('out')">🏧 ATM Withdrawal</button><button class="btn-submit" id="btnDep" style="background:#475569;margin:0" onclick="openCash('in')">🏦 Cash Deposit</button></div>
+<div id="txnError" class="app-status-msg"></div>
+<div class="form-group">
+<select id="txnCategory">
+<option value="General">Select Category</option><option value="Food">Food & Dining</option><option value="Grocery">Grocery</option><option value="Bills">Bills & Utilities</option><option value="Shopping">Shopping</option><option value="Travel">Travel & Fuel</option><option value="Hospital">Hospital</option><option value="Medical">Medical</option><option value="Education">Education</option><option value="Recharge">Mobile & Internet</option><option value="Entertainment">Entertainment</option><option value="Insurance">Insurance</option><option value="Fitness">Fitness & Gym</option><option value="Clothing">Clothing</option><option value="Beauty">Beauty & Salon</option><option value="Pets">Pets</option><option value="Home">Home & Repairs</option><option value="Savings">Savings & Investment</option><option value="Subscriptions">Subscriptions</option><option value="Gifts">Gifts & Donations</option><option value="Rent">Rent</option><option value="Salary">Salary</option><option value="Loan">Loan Payment</option><option value="Received">Money Received</option><option value="Other">Other</option>
+</select>
+</div>
+<div class="form-group"><input type="text" id="txnDesc" placeholder="Description (e.g. Hotel bill)"></div>
+<div class="grid-2" style="margin-bottom:0">
+<div class="form-group"><input type="number" id="txnAmount" placeholder="Amount"></div>
+<div class="form-group">
+<select id="txnType" onchange="updateAccLabel()"><option value="income" id="optInc" style="color:#16a34a;font-weight:700">Income (+)</option><option value="expense" id="optExp" style="color:#dc2626;font-weight:700">Expense (-)</option></select>
+</div>
+</div>
+<div class="form-group"><span class="fld-label" id="lblAcc">Payment From</span><input type="hidden" id="txnAcc" value="cash"><div id="accChips" class="chips"></div></div>
+<input type="hidden" id="txnMode" value="">
+<button class="btn-submit" id="btnAddTxn" onclick="addTransaction()">Add Transaction</button>
+<button class="btn-submit" id="btnCancelEdit" onclick="cancelEdit(true)" style="display:none;background:#64748b">Cancel Edit</button>
+<div class="form-group" style="margin-top:15px"><input type="text" id="searchTxn" placeholder="🔍 Search transactions..." oninput="render()"></div>
+<ul id="txnList" class="item-list" style="margin-top:10px"></ul>
+</div>
+
+<div id="tabBank" class="card tab-section">
+<div class="section-title"><span id="lblBankTitle">🏦 Bank Accounts</span></div>
+<div id="sumBank" class="sum-box sum-blue"></div>
+<div id="bankError" class="app-status-msg"></div>
+<div class="form-group"><select id="bankType"><option value="bank">🏦 Bank Account</option><option value="wallet">📱 Wallet / UPI App</option><option value="other">🪙 Other</option></select></div>
+<div class="form-group"><input type="text" id="bankName" placeholder="Account Name (e.g. Federal Bank)"></div>
+<div class="form-group"><input type="number" id="bankBalance" placeholder="Current Balance"></div>
+<button class="btn-submit" id="btnAddBank" onclick="addBankAccount()">Add Bank Account</button>
+<ul id="bankList" class="item-list" style="margin-top:12px"></ul>
+</div>
+
+<div id="tabLoan" class="card tab-section">
+<div class="section-title"><span id="lblLoanTitle">📋 Loans & Due Reminders</span></div>
+<div id="sumLoan" class="sum-box sum-yellow"></div>
+<div id="loanError" class="app-status-msg"></div>
+<div class="form-group"><select id="loanKind" onchange="updateLoanForm()"><option value="loan">📋 Loan / EMI / Due</option><option value="credit">💳 Credit Card</option></select></div>
+<div class="form-group"><input type="text" id="loanName" placeholder="Loan / Person Name" autocomplete="off"></div>
+<div id="creditNote" style="display:none;font-size:.78rem;color:#64748b;margin:0 0 10px;line-height:1.4"></div>
+<div class="grid-2" style="margin-bottom:0">
+<div class="form-group" id="loanAmtWrap"><input type="number" id="loanAmount" placeholder="Due Amount"></div>
+<div class="form-group" id="loanDateWrap"><input type="date" id="loanDate"></div>
+</div>
+<button class="btn-submit" id="btnAddLoan" onclick="addLoan()" style="background:var(--loan)">Add Loan / Due</button>
+<ul id="loanList" class="item-list" style="margin-top:12px"></ul>
+</div>
+
+<div id="tabRec" class="card tab-section">
+<div class="section-title"><span id="lblRecTitle">🔄 Pending Receivables</span></div>
+<div id="sumRec" class="sum-box sum-green"></div>
+<div id="recError" class="app-status-msg"></div>
+<div class="form-group"><input type="text" id="recName" placeholder="From Whom (Name)"></div>
+<div class="form-group"><input type="number" id="recAmount" placeholder="Amount to Receive"></div>
+<button class="btn-submit" id="btnAddRec" onclick="addReceivable()">Add Receivable</button>
+<ul id="recList" class="item-list" style="margin-top:12px"></ul>
+</div>
+
+<div id="tabRep" class="card tab-section">
+<div class="section-title"><span>📊 Monthly Report</span></div>
+<input type="month" id="repMonth" onchange="renderReport()">
+<div class="grid-2" style="margin-top:10px">
+<div class="sub-box"><span>Income</span><b id="repInc" style="color:var(--income)"></b></div>
+<div class="sub-box"><span>Expense</span><b id="repExp" style="color:var(--expense)"></b></div>
+</div>
+<div class="section-title" style="margin-top:6px">Where your money went</div>
+<div id="repCats"></div>
+<div class="section-title" style="margin-top:14px">Last 6 months <small style="font-weight:400;font-size:.7rem"><span style="color:var(--income)">■</span> in <span style="color:var(--expense)">■</span> out</small></div>
+<div id="repTrend" class="trend"></div>
+<div class="section-title" style="margin-top:18px">💾 Backup & Reminders</div>
+<div id="repMsg" class="app-status-msg"></div>
+<div class="grid-2" style="margin-bottom:0">
+<button class="btn-submit" onclick="exportJSON()">⬇️ Export Backup</button>
+<label for="importFile" class="btn-submit" style="background:#475569;display:block;text-align:center">⬆️ Import Backup</label>
+</div>
+<button class="btn-submit" id="btnCopyBackup" style="background:#0891b2" onclick="copyBackup()">📋 Copy Backup Text</button>
+<button class="btn-submit" style="background:#16a34a" onclick="exportCSV()">📄 Export CSV (Excel)</button>
+<button class="btn-submit" style="background:#7c3aed" onclick="enableNotif()">🔔 Enable Due Reminders</button>
+<textarea id="importText" placeholder="Paste backup text here (if file import does not work)..." style="width:100%;height:80px;margin-top:12px;padding:10px;border:1px solid var(--border);border-radius:10px;font-size:.8rem;background:#f8fafc;outline:none"></textarea>
+<button class="btn-submit" id="btnRestoreText" style="background:#475569" onclick="importFromText()">📥 Restore from Pasted Text</button>
+<input type="file" id="importFile" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden" onclick="this.value=''" onchange="importJSON(event)">
+</div>
+</div>
+
+
+
+<script>
+let currency=localStorage.getItem('co_curr')||'₹';
+let lang=localStorage.getItem('co_lang')||'en';
+let soundEnabled=localStorage.getItem('co_sound')!=='false';
+let savedPin=localStorage.getItem('co_user_pin');
+let savedAns=localStorage.getItem('co_user_ans');
+let isSettingUp=!savedPin;
+let isRecovering=false;
+let loginMode=isSettingUp?'setup':'login';
+let actualBalance="";
+let isHidden=false;
+let deleteTargetType='';
+let deleteTargetIndex=null;
+let editIdx=null;
+let confirmCb=null;
+
+function applyTheme(d){document.body.classList.toggle('dark',d);document.getElementById('themeBtn').innerText=d?'☀️':'🌙';}
+function toggleTheme(){const d=!document.body.classList.contains('dark');try{localStorage.setItem('co_theme',d?'dark':'light');}catch(e){}applyTheme(d);}
+(function(){let t=null;try{t=localStorage.getItem('co_theme');}catch(e){}
+ applyTheme(t?t==='dark':!!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches));})();
+document.getElementById('currencySelect').value=currency;
+document.getElementById('langSelect').value=lang;
+document.getElementById('soundBtn').innerText=soundEnabled?'🔊':'🔇';
+
+if(isSettingUp){
+ document.getElementById('confirmPinDiv').style.display='block';
+ document.getElementById('setupSecQDiv').style.display='block';
+ document.getElementById('forgotPinLink').style.display='none';
+}else{document.getElementById('forgotPinLink').style.display='block';}
+
+let db=JSON.parse(localStorage.getItem('co_db_colored_lock'))||{txns:[],banks:[],loans:[],receivables:[]};
+/* migration: give banks an id, old transactions count as Cash */
+(function(){let ch=false;
+ if(typeof db.cashOpen!=='number'){db.cashOpen=0;ch=true;}
+ if(db.upiOpen||db.cardOpen){db.cashOpen=Math.round(((db.cashOpen||0)+(db.upiOpen||0)+(db.cardOpen||0))*100)/100;ch=true;}
+ if('upiOpen' in db||'cardOpen' in db){delete db.upiOpen;delete db.cardOpen;ch=true;}
+ db.txns.forEach(t=>{if(t.acc==='upi'||t.acc==='card'){t.mode=t.mode||(t.acc==='upi'?'UPI':'Card');t.acc='cash';ch=true;}});
+ db.banks.forEach(b=>{if(!b.id){b.id=genId();ch=true;}});
+ db.loans.forEach(l=>{if(!l.id){l.id=genId();ch=true;}});
+ db.receivables.forEach(r=>{if(!r.id){r.id=genId();ch=true;}});
+ db.txns.forEach(t=>{if(!t.acc||t.acc==='none'){t.acc='cash';ch=true;}if(t.mode===undefined){t.mode='';ch=true;}});
+ if(ch){try{localStorage.setItem('co_db_colored_lock',JSON.stringify(db));}catch(e){}}
+})();
+
+const texts={
+en:{netBal:"Total Net Balance",income:"Total Income",expense:"Total Expense",txnTitle:"💸 Daily Income & Expense",bankTitle:"🏦 Bank Accounts",loanTitle:"📋 Loans & Due Reminders",recTitle:"🔄 Pending Receivables",addTxn:"Add Transaction",addBank:"Add Bank Account",addLoan:"Add Loan / Due",addRec:"Add Receivable",incOpt:"Income (+)",expOpt:"Expense (-)",tabTxn:"💸 Daily",tabBank:"🏦 Banks",tabLoan:"📋 Loans",tabRec:"🔄 Pending"},
+ml:{netBal:"ആകെ ബാക്കി തുക",income:"ആകെ വരവ്",expense:"ആകെ ചെലവ്",txnTitle:"💸 വരവും ചെലവും",bankTitle:"🏦 ബാങ്ക് അക്കൗണ്ടുകൾ",loanTitle:"📋 ലോണുകളും ഡ്യൂ തീയതികളും",recTitle:"🔄 കിട്ടാനുള്ള പണം",addTxn:"കണക്ക് ചേർക്കുക",addBank:"ബാങ്ക് അക്കൗണ്ട് ചേർക്കുക",addLoan:"ലോൺ / ഡ്യൂ ചേർക്കുക",addRec:"കിട്ടാനുള്ള തുക ചേർക്കുക",incOpt:"വരവ് (+)",expOpt:"ചെലവ് (-)",tabTxn:"💸 വരവ്/ചെലവ്",tabBank:"🏦 ബാങ്ക്",tabLoan:"📋 ലോൺ",tabRec:"🔄 കിട്ടാനുള്ളത്"},
+hi:{netBal:"कुल शेष राशि",income:"कुल आय",expense:"कुल खर्च",txnTitle:"💸 दैनिक आय और व्यय",bankTitle:"🏦 बैंक खाते",loanTitle:"📋 ऋण और देय तिथियां",recTitle:"🔄 प्राप्त होने वाली राशि",addTxn:"लेनदेन जोड़ें",addBank:"बैंक खाता जोड़ें",addLoan:"ऋण जोड़ें",addRec:"प्राप्त राशि जोड़ें",incOpt:"आय (+)",expOpt:"खर्च (-)",tabTxn:"💸 दैनिक",tabBank:"🏦 बैंक",tabLoan:"📋 ऋण",tabRec:"🔄 बकाया"},
+ta:{netBal:"மொத்த இருப்பு",income:"மொத்த வருமானம்",expense:"மொத்த செலவு",txnTitle:"💸 வரவு மற்றும் செலவு",bankTitle:"🏦 வங்கி கணக்குகள்",loanTitle:"📋 கடன் நினைவூட்டல்கள்",recTitle:"🔄 வர வேண்டிய தொகை",addTxn:"சேர்க்கவும்",addBank:"வங்கி கணக்கை சேர்க்கவும்",addLoan:"கடன் சேர்க்கவும்",addRec:"பெற வேண்டியதை சேர்க்கவும்",incOpt:"வருமானம் (+)",expOpt:"செலவு (-)",tabTxn:"💸 தினசரி",tabBank:"🏦 வங்கி",tabLoan:"📋 கடன்",tabRec:"🔄 வரவேண்டியது"},
+ar:{netBal:"إجمالي الرصيد الصافي",income:"إجمالي الدخل",expense:"إجمالي المصروفات",txnTitle:"💸 الدخل والمصروفات اليومية",bankTitle:"🏦 الحسابات البنكية",loanTitle:"📋 القروض والمواعيد",recTitle:"🔄 المبالغ المستحقة",addTxn:"إضافة معاملة",addBank:"إضافة حساب",addLoan:"إضافة قرض",addRec:"إضافة مبلغ مستحق",incOpt:"دخل (+)",expOpt:"مصروف (-)",tabTxn:"💸 يومي",tabBank:"🏦 بنوك",tabLoan:"📋 قروض",tabRec:"🔄 مستحقات"},
+es:{netBal:"Balance Neto Total",income:"Ingresos Totales",expense:"Gastos Totales",txnTitle:"💸 Ingresos y Gastos",bankTitle:"🏦 Cuentas Bancarias",loanTitle:"📋 Préstamos y Vencimientos",recTitle:"🔄 Cuentas por Cobrar",addTxn:"Añadir Transacción",addBank:"Añadir Banco",addLoan:"Añadir Préstamo",addRec:"Añadir por Cobrar",incOpt:"Ingreso (+)",expOpt:"Gasto (-)",tabTxn:"💸 Diario",tabBank:"🏦 Bancos",tabLoan:"📋 Préstamos",tabRec:"🔄 Pendiente"},
+fr:{netBal:"Solde Net Total",income:"Revenu Total",expense:"Dépense Totale",txnTitle:"💸 Revenus et Dépenses",bankTitle:"🏦 Comptes Bancaires",loanTitle:"📋 Prêts et Échéances",recTitle:"🔄 Créances en Attente",addTxn:"Ajouter Transaction",addBank:"Ajouter Banque",addLoan:"Ajouter Prêt",addRec:"Ajouter Créance",incOpt:"Revenu (+)",expOpt:"Dépense (-)",tabTxn:"💸 Quotidien",tabBank:"🏦 Banques",tabLoan:"📋 Prêts",tabRec:"🔄 Attente"},
+de:{netBal:"Gesamtsaldo",income:"Gesamteinnahmen",expense:"Gesamtausgaben",txnTitle:"💸 Einnahmen & Ausgaben",bankTitle:"🏦 Bankkonten",loanTitle:"📋 Kredite & Fälligkeiten",recTitle:"🔄 Ausstehende Forderungen",addTxn:"Transaktion hinzufügen",addBank:"Bankkonto hinzufügen",addLoan:"Kredit hinzufügen",addRec:"Forderung hinzufügen",incOpt:"Einnahme (+)",expOpt:"Ausgabe (-)",tabTxn:"💸 Täglich",tabBank:"🏦 Banken",tabLoan:"📋 Kredite",tabRec:"🔄 Offen"}
+};
+
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function togglePinVisibility(inputId,iconId){
+ const input=document.getElementById(inputId),icon=document.getElementById(iconId);
+ if(input.type==="password"){input.type="text";icon.textContent="👁️";}
+ else{input.type="password";icon.textContent="👁️‍🗨️";}
+}
+function switchTab(tabId,btn){
+ document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
+ document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+ document.getElementById(tabId).classList.add('active');
+ btn.classList.add('active');
+}
+function showMessage(msg,ok){
+ const box=document.getElementById('statusMsg');
+ box.style.display='block';box.innerText=msg;
+ box.style.color=ok?'#16a34a':'#dc2626';box.style.background=ok?'#dcfce7':'#fee2e2';
+}
+let msgTimers={};
+function showFieldError(id,msg,ok,ms){
+ const e=document.getElementById(id);
+ e.style.display='block';e.innerText=(ok?"✅ ":"⚠️ ")+msg;
+ e.style.color=ok?'#16a34a':'#dc2626';e.style.background=ok?'#dcfce7':'#fee2e2';
+ e.style.border='1px solid '+(ok?'#86efac':'#fecaca');
+ clearTimeout(msgTimers[id]);
+ msgTimers[id]=setTimeout(()=>{e.style.display='none';},ms||3500);
+}
+function askConfirm(msg,cb){
+ confirmCb=cb;
+ document.getElementById('confirmText').innerText=msg;
+ document.getElementById('confirmModal').style.display='flex';
+}
+function confirmClose(ok){
+ document.getElementById('confirmModal').style.display='none';
+ const cb=confirmCb;confirmCb=null;
+ if(ok&&cb)cb();
+}
+const MSG={
+en:{shareDone:'Choose Drive / Files / WhatsApp in the share menu to save the file.',dlStarted:'Download started. Check your Downloads folder. If the file is missing, use "Copy Backup Text".',saveFail:'Could not save the file. Use "Copy Backup Text" instead.',copyFail:'Copy failed. Select the text in the box below and copy it manually.',copied:'Backup text copied! Paste it in Notes / WhatsApp to keep it safe.',csvShare:'Choose where to save in the share menu.',csvDl:'CSV download started. Check your Downloads folder.',invalid:'Invalid backup file / text. Make sure it is an Expeniq backup (.json).',confirmImport:n=>`This backup has ${n.txns.length} transactions, ${n.banks.length} banks, ${n.loans.length} loans, ${n.receivables.length} receivables. All current data will be REPLACED. Continue?`,restored:'Backup restored successfully!',readFail:'Could not read the file.',pasteFirst:'Paste the backup text first.',btnCopy:'📋 Copy Backup Text',btnRestore:'📥 Restore from Pasted Text',pastePH:'Paste backup text here (if file import does not work)...'},
+ml:{shareDone:'Share മെനുവിൽ Drive / Files / WhatsApp തിരഞ്ഞെടുത്ത് ഫയൽ സേവ് ചെയ്യുക.',dlStarted:'ഡൗൺലോഡ് തുടങ്ങി. Downloads ഫോൾഡർ നോക്കുക. ഫയൽ കണ്ടില്ലെങ്കിൽ "ബാക്കപ്പ് ടെക്സ്റ്റ് കോപ്പി" ഉപയോഗിക്കുക.',saveFail:'ഫയൽ സേവ് ആയില്ല. "ബാക്കപ്പ് ടെക്സ്റ്റ് കോപ്പി" ഉപയോഗിക്കുക.',copyFail:'കോപ്പി ആയില്ല. താഴെയുള്ള ബോക്സിലെ ടെക്സ്റ്റ് സെലക്ട് ചെയ്ത് കോപ്പി ചെയ്യുക.',copied:'ബാക്കപ്പ് ടെക്സ്റ്റ് കോപ്പി ചെയ്തു! Notes / WhatsApp ൽ പേസ്റ്റ് ചെയ്ത് സൂക്ഷിക്കുക.',csvShare:'Share മെനുവിൽ സേവ് ചെയ്യേണ്ട സ്ഥലം തിരഞ്ഞെടുക്കുക.',csvDl:'CSV ഡൗൺലോഡ് തുടങ്ങി. Downloads ഫോൾഡർ നോക്കുക.',invalid:'ബാക്കപ്പ് ഫയൽ / ടെക്സ്റ്റ് തെറ്റാണ്. Expeniq ബാക്കപ്പ് (.json) ആണോ എന്ന് നോക്കുക.',confirmImport:n=>`ഈ ബാക്കപ്പിൽ ${n.txns.length} ഇടപാടുകൾ, ${n.banks.length} ബാങ്കുകൾ, ${n.loans.length} ലോണുകൾ, ${n.receivables.length} കിട്ടാനുള്ളവ ഉണ്ട്. നിലവിലെ എല്ലാ ഡാറ്റയും മാറ്റപ്പെടും. തുടരട്ടെ?`,restored:'ബാക്കപ്പ് വിജയകരമായി റീസ്റ്റോർ ചെയ്തു!',readFail:'ഫയൽ വായിക്കാൻ പറ്റിയില്ല.',pasteFirst:'ആദ്യം ബാക്കപ്പ് ടെക്സ്റ്റ് പേസ്റ്റ് ചെയ്യുക.',btnCopy:'📋 ബാക്കപ്പ് ടെക്സ്റ്റ് കോപ്പി',btnRestore:'📥 പേസ്റ്റ് ചെയ്ത ടെക്സ്റ്റിൽ നിന്ന് റീസ്റ്റോർ',pastePH:'ബാക്കപ്പ് ടെക്സ്റ്റ് ഇവിടെ പേസ്റ്റ് ചെയ്യുക (ഫയൽ ഇമ്പോർട്ട് പറ്റിയില്ലെങ്കിൽ)...'},
+hi:{shareDone:'फ़ाइल सेव करने के लिए Share मेनू में Drive / Files / WhatsApp चुनें।',dlStarted:'डाउनलोड शुरू हुआ। Downloads फ़ोल्डर देखें। फ़ाइल न मिले तो "बैकअप टेक्स्ट कॉपी" इस्तेमाल करें।',saveFail:'फ़ाइल सेव नहीं हुई। "बैकअप टेक्स्ट कॉपी" इस्तेमाल करें।',copyFail:'कॉपी नहीं हुआ। नीचे बॉक्स का टेक्स्ट चुनकर खुद कॉपी करें।',copied:'बैकअप टेक्स्ट कॉपी हो गया! Notes / WhatsApp में पेस्ट करके सुरक्षित रखें।',csvShare:'Share मेनू में सेव करने की जगह चुनें।',csvDl:'CSV डाउनलोड शुरू हुआ। Downloads फ़ोल्डर देखें।',invalid:'बैकअप फ़ाइल / टेक्स्ट गलत है। जांचें कि यह Expeniq बैकअप (.json) है।',confirmImport:n=>`इस बैकअप में ${n.txns.length} लेनदेन, ${n.banks.length} बैंक, ${n.loans.length} ऋण, ${n.receivables.length} बकाया हैं। मौजूदा सारा डेटा बदल जाएगा। जारी रखें?`,restored:'बैकअप सफलतापूर्वक रीस्टोर हो गया!',readFail:'फ़ाइल पढ़ नहीं सके।',pasteFirst:'पहले बैकअप टेक्स्ट पेस्ट करें।',btnCopy:'📋 बैकअप टेक्स्ट कॉपी',btnRestore:'📥 पेस्ट किए टेक्स्ट से रीस्टोर',pastePH:'बैकअप टेक्स्ट यहां पेस्ट करें (फ़ाइल इम्पोर्ट न चले तो)...'},
+ta:{shareDone:'கோப்பைச் சேமிக்க Share மெனுவில் Drive / Files / WhatsApp தேர்வு செய்யவும்.',dlStarted:'பதிவிறக்கம் தொடங்கியது. Downloads கோப்புறையைப் பார்க்கவும். கோப்பு இல்லையெனில் "காப்பு உரை நகல்" பயன்படுத்தவும்.',saveFail:'கோப்பைச் சேமிக்க முடியவில்லை. "காப்பு உரை நகல்" பயன்படுத்தவும்.',copyFail:'நகலெடுக்க முடியவில்லை. கீழே உள்ள பெட்டியில் உரையைத் தேர்ந்து நகலெடுக்கவும்.',copied:'காப்பு உரை நகலெடுக்கப்பட்டது! Notes / WhatsApp இல் ஒட்டிப் பாதுகாக்கவும்.',csvShare:'Share மெனுவில் சேமிக்கும் இடத்தைத் தேர்வு செய்யவும்.',csvDl:'CSV பதிவிறக்கம் தொடங்கியது. Downloads கோப்புறையைப் பார்க்கவும்.',invalid:'காப்பு கோப்பு / உரை தவறானது. இது Expeniq காப்பு (.json) என உறுதிசெய்யவும்.',confirmImport:n=>`இந்தக் காப்பில் ${n.txns.length} பரிவர்த்தனைகள், ${n.banks.length} வங்கிகள், ${n.loans.length} கடன்கள், ${n.receivables.length} வரவேண்டியவை உள்ளன. தற்போதைய எல்லா தரவும் மாற்றப்படும். தொடரவா?`,restored:'காப்பு வெற்றிகரமாக மீட்டமைக்கப்பட்டது!',readFail:'கோப்பைப் படிக்க முடியவில்லை.',pasteFirst:'முதலில் காப்பு உரையை ஒட்டவும்.',btnCopy:'📋 காப்பு உரை நகல்',btnRestore:'📥 ஒட்டிய உரையிலிருந்து மீட்க',pastePH:'காப்பு உரையை இங்கே ஒட்டவும் (கோப்பு இறக்குமதி வேலை செய்யாவிட்டால்)...'},
+ar:{shareDone:'اختر Drive / Files / WhatsApp من قائمة المشاركة لحفظ الملف.',dlStarted:'بدأ التنزيل. تحقق من مجلد Downloads. إذا لم يظهر الملف فاستخدم "نسخ نص النسخة الاحتياطية".',saveFail:'تعذر حفظ الملف. استخدم "نسخ نص النسخة الاحتياطية".',copyFail:'فشل النسخ. حدد النص في المربع أدناه وانسخه يدويًا.',copied:'تم نسخ نص النسخة الاحتياطية! الصقه في Notes / WhatsApp للاحتفاظ به.',csvShare:'اختر مكان الحفظ من قائمة المشاركة.',csvDl:'بدأ تنزيل CSV. تحقق من مجلد Downloads.',invalid:'ملف / نص النسخة الاحتياطية غير صالح. تأكد أنه نسخة Expeniq (.json).',confirmImport:n=>`تحتوي هذه النسخة على ${n.txns.length} معاملة و${n.banks.length} حساب بنكي و${n.loans.length} قرض و${n.receivables.length} مستحقات. سيتم استبدال جميع البيانات الحالية. متابعة؟`,restored:'تمت استعادة النسخة الاحتياطية بنجاح!',readFail:'تعذرت قراءة الملف.',pasteFirst:'الصق نص النسخة الاحتياطية أولاً.',btnCopy:'📋 نسخ نص النسخة الاحتياطية',btnRestore:'📥 استعادة من النص الملصق',pastePH:'الصق نص النسخة الاحتياطية هنا (إذا لم يعمل استيراد الملف)...'},
+es:{shareDone:'Elige Drive / Files / WhatsApp en el menú Compartir para guardar el archivo.',dlStarted:'Descarga iniciada. Revisa la carpeta Descargas. Si falta el archivo, usa "Copiar texto de respaldo".',saveFail:'No se pudo guardar el archivo. Usa "Copiar texto de respaldo".',copyFail:'Error al copiar. Selecciona el texto del cuadro de abajo y cópialo manualmente.',copied:'¡Texto de respaldo copiado! Pégalo en Notas / WhatsApp para guardarlo.',csvShare:'Elige dónde guardar en el menú Compartir.',csvDl:'Descarga CSV iniciada. Revisa la carpeta Descargas.',invalid:'Archivo / texto de respaldo no válido. Asegúrate de que sea un respaldo de Expeniq (.json).',confirmImport:n=>`Este respaldo tiene ${n.txns.length} transacciones, ${n.banks.length} bancos, ${n.loans.length} préstamos, ${n.receivables.length} por cobrar. Se REEMPLAZARÁN todos los datos actuales. ¿Continuar?`,restored:'¡Respaldo restaurado correctamente!',readFail:'No se pudo leer el archivo.',pasteFirst:'Pega primero el texto de respaldo.',btnCopy:'📋 Copiar texto de respaldo',btnRestore:'📥 Restaurar desde texto pegado',pastePH:'Pega aquí el texto de respaldo (si falla la importación de archivo)...'},
+fr:{shareDone:'Choisissez Drive / Files / WhatsApp dans le menu Partager pour enregistrer le fichier.',dlStarted:'Téléchargement lancé. Vérifiez le dossier Téléchargements. Si le fichier est absent, utilisez "Copier le texte de sauvegarde".',saveFail:'Impossible d\'enregistrer le fichier. Utilisez "Copier le texte de sauvegarde".',copyFail:'Échec de la copie. Sélectionnez le texte dans la zone ci-dessous et copiez-le manuellement.',copied:'Texte de sauvegarde copié ! Collez-le dans Notes / WhatsApp pour le conserver.',csvShare:'Choisissez où enregistrer dans le menu Partager.',csvDl:'Téléchargement CSV lancé. Vérifiez le dossier Téléchargements.',invalid:'Fichier / texte de sauvegarde invalide. Vérifiez qu\'il s\'agit d\'une sauvegarde Expeniq (.json).',confirmImport:n=>`Cette sauvegarde contient ${n.txns.length} transactions, ${n.banks.length} banques, ${n.loans.length} prêts, ${n.receivables.length} créances. Toutes les données actuelles seront REMPLACÉES. Continuer ?`,restored:'Sauvegarde restaurée avec succès !',readFail:'Impossible de lire le fichier.',pasteFirst:'Collez d\'abord le texte de sauvegarde.',btnCopy:'📋 Copier le texte de sauvegarde',btnRestore:'📥 Restaurer depuis le texte collé',pastePH:'Collez ici le texte de sauvegarde (si l\'import de fichier échoue)...'},
+de:{shareDone:'Wähle im Teilen-Menü Drive / Files / WhatsApp, um die Datei zu speichern.',dlStarted:'Download gestartet. Prüfe den Ordner Downloads. Fehlt die Datei, nutze "Backup-Text kopieren".',saveFail:'Datei konnte nicht gespeichert werden. Nutze "Backup-Text kopieren".',copyFail:'Kopieren fehlgeschlagen. Markiere den Text im Feld unten und kopiere ihn manuell.',copied:'Backup-Text kopiert! Füge ihn in Notizen / WhatsApp ein, um ihn aufzubewahren.',csvShare:'Wähle im Teilen-Menü den Speicherort.',csvDl:'CSV-Download gestartet. Prüfe den Ordner Downloads.',invalid:'Ungültige Backup-Datei / ungültiger Text. Es muss ein Expeniq-Backup (.json) sein.',confirmImport:n=>`Dieses Backup enthält ${n.txns.length} Transaktionen, ${n.banks.length} Banken, ${n.loans.length} Kredite, ${n.receivables.length} Forderungen. Alle aktuellen Daten werden ERSETZT. Fortfahren?`,restored:'Backup erfolgreich wiederhergestellt!',readFail:'Datei konnte nicht gelesen werden.',pasteFirst:'Füge zuerst den Backup-Text ein.',btnCopy:'📋 Backup-Text kopieren',btnRestore:'📥 Aus eingefügtem Text wiederherstellen',pastePH:'Backup-Text hier einfügen (falls der Datei-Import nicht klappt)...'}
+};
+function m(k,a){const v=(MSG[lang]&&MSG[lang][k])||MSG.en[k];return typeof v==='function'?v(a):v;}
+const POLICY={
+en:{title:'🔒 Privacy Policy',close:'Close',link:'🔒 Privacy Policy',html:`
+<p class="upd">Last updated: 22 November 2026</p>
+<p>Expeniq is a simple, offline personal money tracker made by <b>Rizon Studio</b>. This page explains in plain words what the app does and what happens to your data.</p>
+<h4>1. Short summary</h4>
+<ul><li>Expeniq does <b>not collect, upload, sell or share</b> your data.</li><li>Everything you enter stays <b>only on your own device</b>.</li><li>No account, no sign-up, no ads, no tracking, no internet connection needed.</li></ul>
+<h4>2. Your data stays on your device</h4>
+<p>Everything you enter (transactions, bank and wallet balances, credit card dues, loans, receivables and settings) is stored only in your device's local app storage. Rizon Studio has no server and no user accounts. We never receive, see or store your data.</p>
+<h4>3. What we do NOT do</h4>
+<ul><li>No email address, phone number or name is asked for.</li><li>No analytics, advertising or tracking tools are used.</li><li>No data is sold or shared with anyone.</li><li>No connection to your real bank, UPI or card accounts. You type all amounts yourself.</li><li>No access to your contacts, location, camera, microphone, SMS or photos.</li></ul>
+<h4>4. Please do not enter sensitive numbers</h4>
+<p>Do not type card numbers, CVV, bank passwords, OTPs or UPI PINs anywhere in the app. Expeniq only needs a name (for example "HDFC Credit Card") and an amount. The app blocks entries that look like card numbers.</p>
+<h4>5. How the PIN works</h4>
+<p>The 4-digit PIN and security answer only lock the app screen on your device. They are a convenience lock, not strong encryption. The stored data itself is not encrypted, so anyone who can unlock your phone or access the app's storage may be able to read it. Please also use your phone's own screen lock. If you forget the PIN, you can reset it with your security answer. If you also forget the answer, the only way to continue is to clear the app's data, which deletes everything.</p>
+<h4>6. How the main features work</h4>
+<ul><li><b>Daily:</b> add income and expenses with a category and payment method (cash, UPI, debit card, credit card). ATM withdrawals and cash deposits only move money between cash and your bank; they are not counted as income or expense.</li><li><b>Banks:</b> balances you type for your bank accounts, wallets and other accounts.</li><li><b>Loans / Pending:</b> loans, EMIs, credit card dues and money you are to receive. Mark them settled to remove them from your net balance.</li><li><b>Report:</b> monthly summary and 6-month chart, calculated on your device.</li><li><b>Languages:</b> the app can be shown in several languages. Your language choice is saved only on your device.</li></ul>
+<h4>7. Backup, Export and Import</h4>
+<p>Export creates a file (.json) with all your data, and CSV export creates a spreadsheet of your transactions. These files are <b>not encrypted</b>. When you share a file (Drive, WhatsApp, email), it goes only where you choose, so keep it somewhere safe. Import replaces the current data with the backup after you confirm.</p>
+<h4>8. Reminders and offline use</h4>
+<p>Due-date reminders are local notifications created on your device when you open the app, and only if you allow notifications. Nothing is sent from a server. The app stores its own files on your device so it can work without internet.</p>
+<h4>9. Losing data</h4>
+<p>Because data lives only on your device, clearing app data, uninstalling the app or changing phone will delete it. <b>Export a backup regularly.</b> We cannot recover your data because we never have a copy.</p>
+<h4>10. Deleting your data</h4>
+<p>Delete items inside the app, or clear the app's storage / uninstall it from your phone settings. This removes everything permanently. Since we hold no data about you, there is nothing to delete on our side.</p>
+<h4>11. Children</h4>
+<p>Expeniq is a general-purpose finance tool and is not directed at children. It does not knowingly collect any information from anyone, including children.</p>
+<h4>12. Changes to this policy</h4>
+<p>If the app or this policy changes (for example if a new feature handles data differently), the updated version will appear here with a new date.</p>
+<h4>13. Contact us</h4>
+<p>Questions about this policy or the app? Email <b>Rizon Studio</b> at <a href="mailto:rizonstudio.official@gmail.com">rizonstudio.official@gmail.com</a>.</p>
+<p style="margin-top:12px">By using Expeniq you agree to this policy.</p>`}
+};
+function openPrivacy(){
+ const P=POLICY.en;
+ document.getElementById('privTitle').innerText=Tx(P.title);
+ document.getElementById('privClose').innerText=Tx(P.close);
+ document.getElementById('privBody').innerHTML=P.html;
+ document.getElementById('privBody').scrollTop=0;
+ document.getElementById('privacyModal').style.display='flex';
+}
+function closePrivacy(){document.getElementById('privacyModal').style.display='none';}
+function refreshPrivacyLinks(){
+ const P=POLICY.en;
+ ['privLinkLogin'].forEach(i=>{const e=document.getElementById(i);if(e)e.innerText=Tx(P.link);});
+ if(document.getElementById('privacyModal').style.display==='flex')openPrivacy();
+}
+function applyLanguage(){
+ const t=texts[lang]||texts.en,g=id=>document.getElementById(id);
+ document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';applyI18n();renderLoginTexts();
+ g('lblNetBalance').innerText=t.netBal;g('lblIncome').innerText=t.income;g('lblExpense').innerText=t.expense;
+ g('lblTxnTitle').innerText=t.txnTitle;g('lblBankTitle').innerText=t.bankTitle;g('lblLoanTitle').innerText=t.loanTitle;g('lblRecTitle').innerText=t.recTitle;
+ g('btnAddTxn').innerText=editIdx!==null?"✏️ "+Tx("Update Transaction"):t.addTxn;
+ g('btnAddBank').innerText=t.addBank;g('btnAddLoan').innerText=t.addLoan;g('btnAddRec').innerText=t.addRec;
+ refreshPrivacyLinks();g('btnCopyBackup').innerText=m('btnCopy');g('btnRestoreText').innerText=m('btnRestore');g('importText').placeholder=m('pastePH');
+ updateAccLabel();g('optInc').innerText=t.incOpt;g('optExp').innerText=t.expOpt;
+ g('tabBtnTxn').innerText=t.tabTxn;g('tabBtnBank').innerText=t.tabBank;g('tabBtnLoan').innerText=t.tabLoan;g('tabBtnRec').innerText=t.tabRec;
+ updateLoanForm();
+ g('btnAtm').innerText='🏧 '+L('atmOut');g('btnDep').innerText='🏦 '+L('cashIn');
+}
+function changeLanguage(){lang=document.getElementById('langSelect').value;localStorage.setItem('co_lang',lang);applyLanguage();render();}
+function toggleSound(){soundEnabled=!soundEnabled;localStorage.setItem('co_sound',soundEnabled);document.getElementById('soundBtn').innerText=soundEnabled?'🔊':'🔇';}
+function playBeep(){
+ if(!soundEnabled)return;
+ try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();
+ o.connect(g);g.connect(c.destination);o.frequency.value=600;g.gain.setValueAtTime(.1,c.currentTime);o.start();o.stop(c.currentTime+.1);}catch(e){}
+}
+
+const LBL={
+en:{atmOut:'ATM Withdrawal',cashIn:'Cash Deposit',atmOutSub:'Money moves from your bank to cash in hand. It is not counted as an expense.',cashInSub:'Money moves from cash in hand to your bank. It is not counted as income.',needBankAtm:'First add your bank in the Banks tab.',pickBankFirst:'Please choose a bank.',amountPH:'Amount',dueWord:'Due',addCredit:'Add Credit Card',payBillFrom:'Pay card bill from',badBillAmt:'Enter an amount up to the due ({due}).',noCardNo:'Please enter only a name. Never enter a card number.',creditNote:'Enter only a card name and the amount you owe. Do not enter card numbers or dates.',creditLbl:'Credit card',payBill:'Pay bill',noDue:'This card has no due amount.',editCardTitle:'Edit credit card',cardNamePH:'Card name (e.g. HDFC Credit Card)',refundTooMuch:'A refund cannot be more than the due ({due}).',noEditBill:'This entry cannot be edited. Delete it and add again.',pickBank:'Which bank?',viaBank:'via bank',needBank:'To pay by UPI or Card, first add your bank in the Banks tab.',confirmBtn:'Confirm',upiHint:'Paying through your bank using UPI? Choose that bank instead. Use UPI only for a wallet balance such as GPay or Paytm.',clamped:'Balance of "{name}" was set to 0 because that money was already spent.',negBlock:'Not enough balance in "{name}" (available {bal}). Add income first, or fix the balance with the ✏️ button.',negDel:'Cannot delete: "{name}" balance would go below zero (available {bal}).',badNeg:'Balance cannot be negative.',needAcc:'To choose UPI / Card / Net Banking, first select a bank, wallet or card account above. Cash payments have no method.',addNew:'Add new',noAcc:'Not counted (other)',payFrom:'Payment From',recvIn:'Received In',cash:'Cash',method:'Method (optional)',sumDaily:"Today",sumBank:'Total Bank Balance',cashInHand:'Cash in hand',sumLoan:'Total Remaining Loan',sumRec:'Total Pending to Receive',deleted:'Deleted account',editTitle:'Edit Balance',editCashTitle:'Edit Cash Balance',lblName:'Account Name',lblBal:'Balance',save:'Save',cancel:'Cancel',badNum:'Please enter a valid amount!',badName:'Please enter a name!',delBank:'Delete "{name}"? Its balance ({bal}) will be removed from your total. {n} past transaction(s) stay in your history.'},
+ml:{atmOut:'ATM പിൻവലിക്കൽ',cashIn:'ക്യാഷ് ഡിപ്പോസിറ്റ്',atmOutSub:'ബാങ്കിൽ നിന്ന് കയ്യിലെ ക്യാഷിലേക്ക് പണം മാറുന്നു. ചെലവായി കണക്കാക്കില്ല.',cashInSub:'കയ്യിലെ ക്യാഷിൽ നിന്ന് ബാങ്കിലേക്ക് പണം മാറുന്നു. വരവായി കണക്കാക്കില്ല.',needBankAtm:'ആദ്യം Banks ടാബിൽ നിങ്ങളുടെ ബാങ്ക് ചേർക്കുക.',pickBankFirst:'ഒരു ബാങ്ക് തിരഞ്ഞെടുക്കുക.',amountPH:'തുക',dueWord:'അടയ്ക്കാനുള്ളത്',addCredit:'ക്രെഡിറ്റ് കാർഡ് ചേർക്കുക',payBillFrom:'കാർഡ് ബിൽ എവിടെ നിന്ന് അടയ്ക്കണം',badBillAmt:'അടയ്ക്കാനുള്ള തുകയിൽ ({due}) കൂടാത്ത തുക നൽകുക.',noCardNo:'പേര് മാത്രം നൽകുക. കാർഡ് നമ്പർ ഒരിക്കലും നൽകരുത്.',creditNote:'കാർഡിന്റെ പേരും അടയ്ക്കാനുള്ള തുകയും മാത്രം നൽകുക. കാർഡ് നമ്പറോ തീയതിയോ നൽകരുത്.',creditLbl:'ക്രെഡിറ്റ് കാർഡ്',payBill:'ബിൽ അടയ്ക്കുക',noDue:'ഈ കാർഡിൽ അടയ്ക്കാനുള്ള തുകയില്ല.',editCardTitle:'ക്രെഡിറ്റ് കാർഡ് തിരുത്തുക',cardNamePH:'കാർഡിന്റെ പേര് (ഉദാ. HDFC ക്രെഡിറ്റ് കാർഡ്)',refundTooMuch:'തിരികെ കിട്ടിയ തുക അടയ്ക്കാനുള്ളതിൽ ({due}) കൂടരുത്.',noEditBill:'ഇത് തിരുത്താൻ പറ്റില്ല. ഡിലീറ്റ് ചെയ്ത് വീണ്ടും ചേർക്കുക.',pickBank:'ഏത് ബാങ്കിൽ നിന്ന്?',viaBank:'ബാങ്ക് വഴി',needBank:'UPI / Card ഉപയോഗിക്കാൻ ആദ്യം Banks ടാബിൽ നിങ്ങളുടെ ബാങ്ക് ചേർക്കുക.',confirmBtn:'ഉറപ്പിക്കുക',upiHint:'ബാങ്കിൽ നിന്ന് UPI വഴിയാണ് കൊടുക്കുന്നതെങ്കിൽ ആ ബാങ്ക് തിരഞ്ഞെടുക്കുക. GPay / Paytm പോലുള്ള വാലറ്റ് ബാലൻസിന് മാത്രം UPI ഉപയോഗിക്കുക.',clamped:'"{name}" ബാലൻസ് 0 ആക്കി, ആ പണം മുമ്പേ ചെലവായതിനാൽ.',negBlock:'"{name}" ൽ മതിയായ ബാലൻസ് ഇല്ല (ലഭ്യം {bal}). ആദ്യം വരവ് ചേർക്കുക, അല്ലെങ്കിൽ ✏️ തൊട്ട് ബാലൻസ് തിരുത്തുക.',negDel:'ഡിലീറ്റ് ചെയ്യാൻ പറ്റില്ല: "{name}" ബാലൻസ് പൂജ്യത്തിൽ താഴെയാകും (ലഭ്യം {bal}).',badNeg:'ബാലൻസ് മൈനസ് ആകാൻ പാടില്ല.',needAcc:'UPI / Card / Net Banking തിരഞ്ഞെടുക്കാൻ ആദ്യം മുകളിൽ ഒരു ബാങ്ക്, വാലറ്റ് അല്ലെങ്കിൽ കാർഡ് അക്കൗണ്ട് തിരഞ്ഞെടുക്കുക. ക്യാഷ് പേയ്‌മെന്റിന് രീതി വേണ്ട.',addNew:'പുതിയത്',payFrom:'പേയ്‌മെന്റ് എവിടെ നിന്ന്',recvIn:'ലഭിച്ചത് എവിടേക്ക്',cash:'ക്യാഷ്',method:'രീതി (ഓപ്ഷണൽ)',sumDaily:'ഇന്ന്',sumBank:'ആകെ ബാങ്ക് ബാലൻസ്',cashInHand:'കയ്യിലെ ക്യാഷ്',sumLoan:'ബാക്കിയുള്ള ആകെ ലോൺ',sumRec:'കിട്ടാനുള്ള ആകെ തുക',deleted:'ഡിലീറ്റ് ചെയ്ത അക്കൗണ്ട്',editTitle:'ബാലൻസ് തിരുത്തുക',editCashTitle:'ക്യാഷ് ബാലൻസ് തിരുത്തുക',lblName:'അക്കൗണ്ട് പേര്',lblBal:'ബാലൻസ്',save:'സേവ്',cancel:'റദ്ദാക്കുക',badNum:'ശരിയായ തുക നൽകുക!',badName:'പേര് നൽകുക!',delBank:'"{name}" ഡിലീറ്റ് ചെയ്യണോ? ഇതിലെ ബാലൻസ് ({bal}) ആകെ തുകയിൽ നിന്ന് ഒഴിവാകും. {n} പഴയ ഇടപാടുകൾ ഹിസ്റ്ററിയിൽ തുടരും.'},
+hi:{payFrom:'भुगतान कहाँ से',recvIn:'कहाँ प्राप्त हुआ',cash:'नकद',method:'तरीका (वैकल्पिक)',sumDaily:'आज',sumBank:'कुल बैंक शेष',cashInHand:'हाथ में नकद',sumLoan:'कुल बकाया ऋण',sumRec:'कुल प्राप्त होने वाली राशि',deleted:'हटाया गया खाता',editTitle:'शेष राशि बदलें',editCashTitle:'नकद शेष बदलें',lblName:'खाते का नाम',lblBal:'शेष राशि',save:'सेव',cancel:'रद्द करें',badNum:'कृपया सही राशि दर्ज करें!',badName:'कृपया नाम दर्ज करें!',delBank:'"{name}" हटाएं? इसकी शेष राशि ({bal}) कुल से हट जाएगी। {n} पुराने लेनदेन इतिहास में रहेंगे।'},
+ta:{payFrom:'எங்கிருந்து செலுத்தியது',recvIn:'எங்கு பெறப்பட்டது',cash:'பணம்',method:'முறை (விருப்பம்)',sumDaily:'இன்று',sumBank:'மொத்த வங்கி இருப்பு',cashInHand:'கையில் உள்ள பணம்',sumLoan:'மீதமுள்ள மொத்த கடன்',sumRec:'பெற வேண்டிய மொத்த தொகை',deleted:'நீக்கிய கணக்கு',editTitle:'இருப்பை மாற்று',editCashTitle:'பண இருப்பை மாற்று',lblName:'கணக்கு பெயர்',lblBal:'இருப்பு',save:'சேமி',cancel:'ரத்து',badNum:'சரியான தொகையை உள்ளிடவும்!',badName:'பெயரை உள்ளிடவும்!',delBank:'"{name}" ஐ நீக்கவா? அதன் இருப்பு ({bal}) மொத்தத்திலிருந்து நீக்கப்படும். {n} பழைய பரிவர்த்தனைகள் வரலாற்றில் இருக்கும்.'},
+ar:{payFrom:'الدفع من',recvIn:'الاستلام في',cash:'نقداً',method:'الطريقة (اختياري)',sumDaily:'اليوم',sumBank:'إجمالي رصيد البنوك',cashInHand:'النقد في اليد',sumLoan:'إجمالي القروض المتبقية',sumRec:'إجمالي المستحقات',deleted:'حساب محذوف',editTitle:'تعديل الرصيد',editCashTitle:'تعديل رصيد النقد',lblName:'اسم الحساب',lblBal:'الرصيد',save:'حفظ',cancel:'إلغاء',badNum:'أدخل مبلغاً صحيحاً!',badName:'أدخل اسماً!',delBank:'حذف "{name}"؟ سيتم خصم رصيده ({bal}) من الإجمالي. ستبقى {n} معاملة سابقة في السجل.'},
+es:{payFrom:'Pagado desde',recvIn:'Recibido en',cash:'Efectivo',method:'Método (opcional)',sumDaily:'Hoy',sumBank:'Total en bancos',cashInHand:'Efectivo disponible',sumLoan:'Total de préstamos pendientes',sumRec:'Total por cobrar',deleted:'Cuenta eliminada',editTitle:'Editar saldo',editCashTitle:'Editar saldo en efectivo',lblName:'Nombre de la cuenta',lblBal:'Saldo',save:'Guardar',cancel:'Cancelar',badNum:'¡Ingresa un monto válido!',badName:'¡Ingresa un nombre!',delBank:'¿Eliminar "{name}"? Su saldo ({bal}) se quitará del total. {n} transacción(es) anteriores seguirán en el historial.'},
+fr:{payFrom:'Payé depuis',recvIn:'Reçu sur',cash:'Espèces',method:'Méthode (facultatif)',sumDaily:"Aujourd'hui",sumBank:'Total des banques',cashInHand:'Espèces en main',sumLoan:'Total des prêts restants',sumRec:'Total à recevoir',deleted:'Compte supprimé',editTitle:'Modifier le solde',editCashTitle:'Modifier le solde espèces',lblName:'Nom du compte',lblBal:'Solde',save:'Enregistrer',cancel:'Annuler',badNum:'Entrez un montant valide !',badName:'Entrez un nom !',delBank:"Supprimer « {name} » ? Son solde ({bal}) sera retiré du total. {n} transaction(s) passée(s) restent dans l'historique."},
+de:{payFrom:'Bezahlt von',recvIn:'Eingegangen auf',cash:'Bargeld',method:'Methode (optional)',sumDaily:'Heute',sumBank:'Gesamt Banksaldo',cashInHand:'Bargeld in der Hand',sumLoan:'Verbleibende Kredite gesamt',sumRec:'Ausstehende Forderungen gesamt',deleted:'Gelöschtes Konto',editTitle:'Saldo bearbeiten',editCashTitle:'Bargeldsaldo bearbeiten',lblName:'Kontoname',lblBal:'Saldo',save:'Speichern',cancel:'Abbrechen',badNum:'Bitte gültigen Betrag eingeben!',badName:'Bitte Namen eingeben!',delBank:'„{name}" löschen? Der Saldo ({bal}) wird aus der Gesamtsumme entfernt. {n} frühere Buchung(en) bleiben im Verlauf.'}
+};
+function L(k){const v=LBL[lang]&&LBL[lang][k];if(v)return v;const e=LBL.en[k];return e===undefined?e:Tx(e);}
+/* ===== Full-app translations: key = English text, values = [ml,hi,ta,ar,es,fr,de] ===== */
+const UI_L=['ml','hi','ta','ar','es','fr','de'];
+const UI={
+[`Delete Item?`]:[`ഇനം ഡിലീറ്റ് ചെയ്യണോ?`,`आइटम हटाएं?`,`உருப்படியை நீக்கவா?`,`حذف العنصر؟`,`¿Eliminar elemento?`,`Supprimer l'élément ?`,`Eintrag löschen?`],
+[`Are you sure you want to remove this? This action cannot be undone.`]:[`ഇത് നീക്കം ചെയ്യണമെന്ന് ഉറപ്പാണോ? ഈ പ്രവർത്തനം തിരികെ മാറ്റാനാവില്ല.`,`क्या आप इसे हटाना चाहते हैं? यह क्रिया वापस नहीं की जा सकती।`,`இதை நீக்க விரும்புகிறீர்களா? இந்த செயலை மீட்டெடுக்க முடியாது.`,`هل أنت متأكد من حذف هذا؟ لا يمكن التراجع عن هذا الإجراء.`,`¿Seguro que quieres eliminar esto? Esta acción no se puede deshacer.`,`Voulez-vous vraiment supprimer ceci ? Cette action est irréversible.`,`Möchtest du das wirklich entfernen? Das lässt sich nicht rückgängig machen.`],
+[`Cancel`]:[`റദ്ദാക്കുക`,`रद्द करें`,`ரத்து`,`إلغاء`,`Cancelar`,`Annuler`,`Abbrechen`],
+[`Yes, Delete`]:[`അതെ, ഡിലീറ്റ്`,`हां, हटाएं`,`ஆம், நீக்கு`,`نعم، احذف`,`Sí, eliminar`,`Oui, supprimer`,`Ja, löschen`],
+[`Confirm`]:[`ഉറപ്പിക്കുക`,`पुष्टि करें`,`உறுதிப்படுத்து`,`تأكيد`,`Confirmar`,`Confirmer`,`Bestätigen`],
+[`Edit Balance`]:[`ബാലൻസ് തിരുത്തുക`,`शेष राशि बदलें`,`இருப்பை மாற்று`,`تعديل الرصيد`,`Editar saldo`,`Modifier le solde`,`Saldo bearbeiten`],
+[`Save`]:[`സേവ്`,`सेव`,`சேமி`,`حفظ`,`Guardar`,`Enregistrer`,`Speichern`],
+[`Please Confirm`]:[`ദയവായി ഉറപ്പിക്കുക`,`कृपया पुष्टि करें`,`தயவுசெய்து உறுதிப்படுத்தவும்`,`يرجى التأكيد`,`Confirma, por favor`,`Veuillez confirmer`,`Bitte bestätigen`],
+[`Continue`]:[`തുടരുക`,`जारी रखें`,`தொடர்க`,`متابعة`,`Continuar`,`Continuer`,`Weiter`],
+[`Privacy Policy`]:[`സ്വകാര്യതാ നയം`,`गोपनीयता नीति`,`தனியுரிமைக் கொள்கை`,`سياسة الخصوصية`,`Política de privacidad`,`Politique de confidentialité`,`Datenschutzerklärung`],
+[`Close`]:[`അടയ്ക്കുക`,`बंद करें`,`மூடு`,`إغلاق`,`Cerrar`,`Fermer`,`Schließen`],
+[`Setup New PIN`]:[`പുതിയ PIN സെറ്റ് ചെയ്യുക`,`नया PIN सेट करें`,`புதிய PIN அமைக்கவும்`,`إعداد رمز PIN جديد`,`Configurar nuevo PIN`,`Définir un nouveau PIN`,`Neue PIN einrichten`],
+[`Create PIN, Confirm PIN & Security Question`]:[`PIN ഉണ്ടാക്കുക, PIN സ്ഥിരീകരിക്കുക, സുരക്ഷാ ചോദ്യം തിരഞ്ഞെടുക്കുക`,`PIN बनाएं, PIN की पुष्टि करें और सुरक्षा प्रश्न चुनें`,`PIN உருவாக்கி, உறுதிப்படுத்தி, பாதுகாப்பு கேள்வியைத் தேர்ந்தெடுக்கவும்`,`أنشئ رمز PIN وأكّده واختر سؤال الأمان`,`Crea y confirma tu PIN y elige una pregunta de seguridad`,`Créez et confirmez votre PIN, puis choisissez une question de sécurité`,`PIN erstellen, bestätigen und Sicherheitsfrage wählen`],
+[`What is your favorite food?`]:[`നിങ്ങളുടെ ഇഷ്ട ഭക്ഷണം ഏതാണ്?`,`आपका पसंदीदा खाना कौन सा है?`,`உங்களுக்குப் பிடித்த உணவு எது?`,`ما هو طعامك المفضل؟`,`¿Cuál es tu comida favorita?`,`Quel est votre plat préféré ?`,`Was ist dein Lieblingsessen?`],
+[`What is your favorite movie?`]:[`നിങ്ങളുടെ ഇഷ്ട സിനിമ ഏതാണ്?`,`आपकी पसंदीदा फ़िल्म कौन सी है?`,`உங்களுக்குப் பிடித்த திரைப்படம் எது?`,`ما هو فيلمك المفضل؟`,`¿Cuál es tu película favorita?`,`Quel est votre film préféré ?`,`Was ist dein Lieblingsfilm?`],
+[`Who is your favorite sports player?`]:[`നിങ്ങളുടെ ഇഷ്ട കായിക താരം ആരാണ്?`,`आपका पसंदीदा खिलाड़ी कौन है?`,`உங்களுக்குப் பிடித்த விளையாட்டு வீரர் யார்?`,`من هو لاعبك الرياضي المفضل؟`,`¿Quién es tu deportista favorito?`,`Qui est votre sportif préféré ?`,`Wer ist dein Lieblingssportler?`],
+[`What was the name of your first school?`]:[`നിങ്ങളുടെ ആദ്യ സ്കൂളിന്റെ പേര് എന്താണ്?`,`आपके पहले स्कूल का नाम क्या था?`,`உங்கள் முதல் பள்ளியின் பெயர் என்ன?`,`ما اسم مدرستك الأولى؟`,`¿Cómo se llamaba tu primera escuela?`,`Quel était le nom de votre première école ?`,`Wie hieß deine erste Schule?`],
+[`What was the name of your first pet?`]:[`നിങ്ങളുടെ ആദ്യ വളർത്തുമൃഗത്തിന്റെ പേര് എന്തായിരുന്നു?`,`आपके पहले पालतू जानवर का नाम क्या था?`,`உங்கள் முதல் செல்லப்பிராணியின் பெயர் என்ன?`,`ما اسم أول حيوان أليف لديك؟`,`¿Cómo se llamaba tu primera mascota?`,`Comment s'appelait votre premier animal de compagnie ?`,`Wie hieß dein erstes Haustier?`],
+[`In which city were you born?`]:[`നിങ്ങൾ ജനിച്ചത് ഏത് നഗരത്തിലാണ്?`,`आपका जन्म किस शहर में हुआ था?`,`நீங்கள் எந்த நகரத்தில் பிறந்தீர்கள்?`,`في أي مدينة وُلدت؟`,`¿En qué ciudad naciste?`,`Dans quelle ville êtes-vous né(e) ?`,`In welcher Stadt wurdest du geboren?`],
+[`Set PIN & Start`]:[`PIN സെറ്റ് ചെയ്ത് തുടങ്ങുക`,`PIN सेट करें और शुरू करें`,`PIN அமைத்து தொடங்கு`,`تعيين PIN والبدء`,`Fijar PIN y empezar`,`Définir le PIN et commencer`,`PIN setzen & starten`],
+[`Forgot PIN?`]:[`PIN മറന്നോ?`,`PIN भूल गए?`,`PIN மறந்துவிட்டதா?`,`نسيت PIN؟`,`¿Olvidaste el PIN?`,`PIN oublié ?`,`PIN vergessen?`],
+[`Lock`]:[`ലോക്ക്`,`लॉक`,`பூட்டு`,`قفل`,`Bloquear`,`Verrouiller`,`Sperren`],
+[`Today`]:[`ഇന്ന്`,`आज`,`இன்று`,`اليوم`,`Hoy`,`Aujourd'hui`,`Heute`],
+[`ATM Withdrawal`]:[`ATM പിൻവലിക്കൽ`,`ATM से निकासी`,`ATM பணம் எடுத்தல்`,`سحب من الصراف`,`Retiro de cajero`,`Retrait DAB`,`Geldautomat-Abhebung`],
+[`Cash Deposit`]:[`ക്യാഷ് ഡിപ്പോസിറ്റ്`,`नकद जमा`,`பணம் டெபாசிட்`,`إيداع نقدي`,`Depósito en efectivo`,`Dépôt d'espèces`,`Bareinzahlung`],
+[`Select Category`]:[`വിഭാഗം തിരഞ്ഞെടുക്കുക`,`श्रेणी चुनें`,`வகையைத் தேர்ந்தெடுக்கவும்`,`اختر الفئة`,`Seleccionar categoría`,`Choisir une catégorie`,`Kategorie wählen`],
+[`General`]:[`പൊതുവായത്`,`सामान्य`,`பொது`,`عام`,`General`,`Général`,`Allgemein`],
+[`Food & Dining`]:[`ഭക്ഷണം`,`खान-पान`,`உணவு`,`الطعام والمطاعم`,`Comida y restaurantes`,`Alimentation et restaurants`,`Essen & Restaurants`],
+[`Grocery`]:[`പലചരക്ക്`,`किराना`,`மளிகை`,`بقالة`,`Supermercado`,`Épicerie`,`Lebensmittel`],
+[`Bills & Utilities`]:[`ബില്ലുകൾ`,`बिल और उपयोगिताएं`,`கட்டணங்கள்`,`الفواتير والخدمات`,`Facturas y servicios`,`Factures et services`,`Rechnungen & Nebenkosten`],
+[`Shopping`]:[`ഷോപ്പിംഗ്`,`खरीदारी`,`ஷாப்பிங்`,`التسوق`,`Compras`,`Achats`,`Einkäufe`],
+[`Travel & Fuel`]:[`യാത്രയും ഇന്ധനവും`,`यात्रा और ईंधन`,`பயணம் & எரிபொருள்`,`السفر والوقود`,`Viajes y combustible`,`Voyage et carburant`,`Reisen & Tanken`],
+[`Hospital`]:[`ആശുപത്രി`,`अस्पताल`,`மருத்துவமனை`,`المستشفى`,`Hospital`,`Hôpital`,`Krankenhaus`],
+[`Medical`]:[`മരുന്ന് / മെഡിക്കൽ`,`दवा / चिकित्सा`,`மருந்து / மருத்துவம்`,`الأدوية / الطبية`,`Medicinas`,`Médicaments`,`Medizin & Apotheke`],
+[`Education`]:[`വിദ്യാഭ്യാസം`,`शिक्षा`,`கல்வி`,`التعليم`,`Educación`,`Éducation`,`Bildung`],
+[`Mobile & Internet`]:[`മൊബൈലും ഇന്റർനെറ്റും`,`मोबाइल और इंटरनेट`,`மொபைல் & இணையம்`,`الجوال والإنترنت`,`Móvil e internet`,`Mobile et internet`,`Handy & Internet`],
+[`Entertainment`]:[`വിനോദം`,`मनोरंजन`,`பொழுதுபோக்கு`,`الترفيه`,`Ocio`,`Loisirs`,`Unterhaltung`],
+[`Insurance`]:[`ഇൻഷുറൻസ്`,`बीमा`,`காப்பீடு`,`التأمين`,`Seguros`,`Assurance`,`Versicherung`],
+[`Gifts & Donations`]:[`സമ്മാനങ്ങളും സംഭാവനകളും`,`उपहार और दान`,`பரிசுகள் & நன்கொடைகள்`,`الهدايا والتبرعات`,`Regalos y donaciones`,`Cadeaux et dons`,`Geschenke & Spenden`],
+[`Fitness & Gym`]:[`ഫിറ്റ്നസ് / ജിം`,`फिटनेस और जिम`,`உடற்பயிற்சி & ஜிம்`,`اللياقة والنادي الرياضي`,`Fitness y gimnasio`,`Fitness et salle de sport`,`Fitness & Fitnessstudio`],
+[`Clothing`]:[`വസ്ത്രങ്ങൾ`,`कपड़े`,`ஆடைகள்`,`الملابس`,`Ropa`,`Vêtements`,`Kleidung`],
+[`Beauty & Salon`]:[`ബ്യൂട്ടി / സലൂൺ`,`ब्यूटी और सैलून`,`அழகு & சலூன்`,`التجميل والصالون`,`Belleza y peluquería`,`Beauté et salon`,`Beauty & Friseur`],
+[`Pets`]:[`വളർത്തുമൃഗങ്ങൾ`,`पालतू जानवर`,`செல்லப்பிராணிகள்`,`الحيوانات الأليفة`,`Mascotas`,`Animaux`,`Haustiere`],
+[`Home & Repairs`]:[`വീടും അറ്റകുറ്റപ്പണിയും`,`घर और मरम्मत`,`வீடு & பழுதுபார்ப்பு`,`المنزل والإصلاحات`,`Hogar y reparaciones`,`Maison et réparations`,`Haus & Reparaturen`],
+[`Savings & Investment`]:[`സമ്പാദ്യവും നിക്ഷേപവും`,`बचत और निवेश`,`சேமிப்பு & முதலீடு`,`المدخرات والاستثمار`,`Ahorros e inversión`,`Épargne et investissement`,`Sparen & Anlage`],
+[`Subscriptions`]:[`സബ്സ്ക്രിപ്ഷനുകൾ`,`सदस्यताएं`,`சந்தாக்கள்`,`الاشتراكات`,`Suscripciones`,`Abonnements`,`Abos`],
+[`Rent`]:[`വാടക`,`किराया`,`வாடகை`,`الإيجار`,`Alquiler`,`Loyer`,`Miete`],
+[`Salary`]:[`ശമ്പളം`,`वेतन`,`சம்பளம்`,`الراتب`,`Salario`,`Salaire`,`Gehalt`],
+[`Loan Payment`]:[`ലോൺ തിരിച്ചടവ്`,`ऋण भुगतान`,`கடன் செலுத்துதல்`,`سداد القرض`,`Pago de préstamo`,`Remboursement de prêt`,`Kreditrate`],
+[`Money Received`]:[`ലഭിച്ച പണം`,`प्राप्त राशि`,`பெற்ற பணம்`,`أموال مستلمة`,`Dinero recibido`,`Argent reçu`,`Erhaltenes Geld`],
+[`Other`]:[`മറ്റുള്ളവ`,`अन्य`,`மற்றவை`,`أخرى`,`Otros`,`Autre`,`Sonstiges`],
+[`Card Bill`]:[`കാർഡ് ബിൽ`,`कार्ड बिल`,`கார்டு பில்`,`فاتورة البطاقة`,`Factura de tarjeta`,`Facture de carte`,`Kartenabrechnung`],
+[`via bank`]:[`ബാങ്ക് വഴി`,`बैंक के माध्यम से`,`வங்கி வழியாக`,`عبر البنك`,`vía banco`,`via la banque`,`über Bank`],
+[`Debit Card`]:[`ഡെബിറ്റ് കാർഡ്`,`डेबिट कार्ड`,`டெபிட் கார்டு`,`بطاقة خصم`,`Tarjeta de débito`,`Carte de débit`,`Debitkarte`],
+[`Card`]:[`കാർഡ്`,`कार्ड`,`கார்டு`,`بطاقة`,`Tarjeta`,`Carte`,`Karte`],
+[`Add new`]:[`പുതിയത്`,`नया जोड़ें`,`புதியது`,`إضافة جديد`,`Añadir nuevo`,`Ajouter`,`Neu hinzufügen`],
+[`Cancel Edit`]:[`തിരുത്തൽ റദ്ദാക്കുക`,`संपादन रद्द करें`,`திருத்தத்தை ரத்து செய்`,`إلغاء التعديل`,`Cancelar edición`,`Annuler la modification`,`Bearbeitung abbrechen`],
+[`Update Transaction`]:[`ഇടപാട് അപ്ഡേറ്റ് ചെയ്യുക`,`लेनदेन अपडेट करें`,`பரிவர்த்தனையைப் புதுப்பி`,`تحديث المعاملة`,`Actualizar transacción`,`Mettre à jour la transaction`,`Transaktion aktualisieren`],
+[`Bank Account`]:[`ബാങ്ക് അക്കൗണ്ട്`,`बैंक खाता`,`வங்கி கணக்கு`,`حساب بنكي`,`Cuenta bancaria`,`Compte bancaire`,`Bankkonto`],
+[`Wallet / UPI App`]:[`വാലറ്റ് / UPI ആപ്പ്`,`वॉलेट / UPI ऐप`,`வாலட் / UPI ஆப்`,`محفظة / تطبيق UPI`,`Billetera / app UPI`,`Portefeuille / appli UPI`,`Wallet / UPI-App`],
+[`Loan / EMI / Due`]:[`ലോൺ / EMI / ഡ്യൂ`,`ऋण / EMI / बकाया`,`கடன் / EMI / நிலுவை`,`قرض / قسط / مستحق`,`Préstamo / cuota / pago pendiente`,`Prêt / mensualité / échéance`,`Kredit / Rate / Fälligkeit`],
+[`Credit Card`]:[`ക്രെഡിറ്റ് കാർഡ്`,`क्रेडिट कार्ड`,`கிரெடிட் கார்டு`,`بطاقة ائتمان`,`Tarjeta de crédito`,`Carte de crédit`,`Kreditkarte`],
+[`Credit card`]:[`ക്രെഡിറ്റ് കാർഡ്`,`क्रेडिट कार्ड`,`கிரெடிட் கார்டு`,`بطاقة ائتمان`,`Tarjeta de crédito`,`Carte de crédit`,`Kreditkarte`],
+[`Monthly Report`]:[`പ്രതിമാസ റിപ്പോർട്ട്`,`मासिक रिपोर्ट`,`மாதாந்திர அறிக்கை`,`التقرير الشهري`,`Informe mensual`,`Rapport mensuel`,`Monatsbericht`],
+[`Report`]:[`റിപ്പോർട്ട്`,`रिपोर्ट`,`அறிக்கை`,`تقرير`,`Informe`,`Rapport`,`Bericht`],
+[`Income`]:[`വരവ്`,`आय`,`வருமானம்`,`الدخل`,`Ingresos`,`Revenus`,`Einnahmen`],
+[`Expense`]:[`ചെലവ്`,`खर्च`,`செலவு`,`المصروفات`,`Gastos`,`Dépenses`,`Ausgaben`],
+[`Where your money went`]:[`പണം എവിടേക്ക് പോയി`,`आपका पैसा कहाँ गया`,`உங்கள் பணம் எங்கே சென்றது`,`أين ذهبت أموالك`,`En qué se fue tu dinero`,`Où est passé votre argent`,`Wohin dein Geld ging`],
+[`No expenses this month.`]:[`ഈ മാസം ചെലവുകളില്ല.`,`इस महीने कोई खर्च नहीं।`,`இந்த மாதம் செலவுகள் இல்லை.`,`لا توجد مصروفات هذا الشهر.`,`Sin gastos este mes.`,`Aucune dépense ce mois-ci.`,`Keine Ausgaben in diesem Monat.`],
+[`Last 6 months`]:[`കഴിഞ്ഞ 6 മാസം`,`पिछले 6 महीने`,`கடந்த 6 மாதங்கள்`,`آخر 6 أشهر`,`Últimos 6 meses`,`6 derniers mois`,`Letzte 6 Monate`],
+[`in`]:[`വരവ്`,`आय`,`வரவு`,`وارد`,`entrada`,`entrées`,`ein`],
+[`out`]:[`ചെലവ്`,`खर्च`,`செலவு`,`صادر`,`salida`,`sorties`,`aus`],
+[`Backup & Reminders`]:[`ബാക്കപ്പും റിമൈൻഡറുകളും`,`बैकअप और रिमाइंडर`,`காப்புப்பிரதி & நினைவூட்டல்கள்`,`النسخ الاحتياطي والتذكيرات`,`Respaldo y recordatorios`,`Sauvegarde et rappels`,`Backup & Erinnerungen`],
+[`Export Backup`]:[`ബാക്കപ്പ് എക്സ്പോർട്ട്`,`बैकअप एक्सपोर्ट`,`காப்புப்பிரதி ஏற்றுமதி`,`تصدير النسخة الاحتياطية`,`Exportar respaldo`,`Exporter la sauvegarde`,`Backup exportieren`],
+[`Import Backup`]:[`ബാക്കപ്പ് ഇമ്പോർട്ട്`,`बैकअप इम्पोर्ट`,`காப்புப்பிரதி இறக்குமதி`,`استيراد النسخة الاحتياطية`,`Importar respaldo`,`Importer la sauvegarde`,`Backup importieren`],
+[`Export CSV (Excel)`]:[`CSV എക്സ്പോർട്ട് (Excel)`,`CSV एक्सपोर्ट (Excel)`,`CSV ஏற்றுமதி (Excel)`,`تصدير CSV (Excel)`,`Exportar CSV (Excel)`,`Exporter en CSV (Excel)`,`CSV exportieren (Excel)`],
+[`Enable Due Reminders`]:[`ഡ്യൂ റിമൈൻഡറുകൾ ഓണാക്കുക`,`देय रिमाइंडर चालू करें`,`நிலுவை நினைவூட்டல்களை இயக்கு`,`تفعيل تذكيرات الاستحقاق`,`Activar recordatorios de vencimiento`,`Activer les rappels d'échéance`,`Fälligkeits-Erinnerungen aktivieren`],
+[`Amount`]:[`തുക`,`राशि`,`தொகை`,`المبلغ`,`Monto`,`Montant`,`Betrag`],
+[`Enter 4-digit PIN`]:[`4 അക്ക PIN നൽകുക`,`4 अंकों का PIN दर्ज करें`,`4 இலக்க PIN உள்ளிடவும்`,`أدخل رمز PIN من 4 أرقام`,`Introduce el PIN de 4 dígitos`,`Saisissez le PIN à 4 chiffres`,`4-stellige PIN eingeben`],
+[`Confirm 4-digit PIN`]:[`4 അക്ക PIN സ്ഥിരീകരിക്കുക`,`4 अंकों के PIN की पुष्टि करें`,`4 இலக்க PIN ஐ உறுதிப்படுத்தவும்`,`أكّد رمز PIN المكوّن من 4 أرقام`,`Confirma el PIN de 4 dígitos`,`Confirmez le PIN à 4 chiffres`,`4-stellige PIN bestätigen`],
+[`Enter your Secret Answer`]:[`നിങ്ങളുടെ രഹസ്യ ഉത്തരം നൽകുക`,`अपना गुप्त उत्तर दर्ज करें`,`உங்கள் ரகசிய பதிலை உள்ளிடவும்`,`أدخل إجابتك السرية`,`Introduce tu respuesta secreta`,`Saisissez votre réponse secrète`,`Gib deine geheime Antwort ein`],
+[`Enter new Secret Answer`]:[`പുതിയ രഹസ്യ ഉത്തരം നൽകുക`,`नया गुप्त उत्तर दर्ज करें`,`புதிய ரகசிய பதிலை உள்ளிடவும்`,`أدخل إجابة سرية جديدة`,`Introduce una nueva respuesta secreta`,`Saisissez une nouvelle réponse secrète`,`Gib eine neue geheime Antwort ein`],
+[`Description (e.g. Hotel bill)`]:[`വിവരണം (ഉദാ. ഹോട്ടൽ ബിൽ)`,`विवरण (जैसे होटल बिल)`,`விவரம் (எ.கா. ஹோட்டல் பில்)`,`الوصف (مثل فاتورة فندق)`,`Descripción (p. ej. cuenta del hotel)`,`Description (p. ex. note d'hôtel)`,`Beschreibung (z. B. Hotelrechnung)`],
+[`Search transactions...`]:[`ഇടപാടുകൾ തിരയുക...`,`लेनदेन खोजें...`,`பரிவர்த்தனைகளைத் தேடு...`,`ابحث في المعاملات...`,`Buscar transacciones...`,`Rechercher des transactions...`,`Transaktionen suchen...`],
+[`Account Name (e.g. Federal Bank)`]:[`അക്കൗണ്ട് പേര് (ഉദാ. ഫെഡറൽ ബാങ്ക്)`,`खाते का नाम (जैसे फेडरल बैंक)`,`கணக்கு பெயர் (எ.கா. பெடரல் வங்கி)`,`اسم الحساب (مثل بنك فيدرال)`,`Nombre de cuenta (p. ej. Federal Bank)`,`Nom du compte (p. ex. Federal Bank)`,`Kontoname (z. B. Federal Bank)`],
+[`Current Balance`]:[`നിലവിലെ ബാലൻസ്`,`वर्तमान शेष राशि`,`தற்போதைய இருப்பு`,`الرصيد الحالي`,`Saldo actual`,`Solde actuel`,`Aktueller Saldo`],
+[`Loan / Person Name`]:[`ലോൺ / വ്യക്തിയുടെ പേര്`,`ऋण / व्यक्ति का नाम`,`கடன் / நபர் பெயர்`,`القرض / اسم الشخص`,`Préstamo / nombre de la persona`,`Prêt / nom de la personne`,`Kredit / Name der Person`],
+[`Due Amount`]:[`അടയ്ക്കാനുള്ള തുക`,`देय राशि`,`செலுத்த வேண்டிய தொகை`,`المبلغ المستحق`,`Monto pendiente`,`Montant dû`,`Fälliger Betrag`],
+[`From Whom (Name)`]:[`ആരിൽ നിന്ന് (പേര്)`,`किससे (नाम)`,`யாரிடமிருந்து (பெயர்)`,`ممن (الاسم)`,`De quién (nombre)`,`De qui (nom)`,`Von wem (Name)`],
+[`Amount to Receive`]:[`കിട്ടാനുള്ള തുക`,`प्राप्त होने वाली राशि`,`பெற வேண்டிய தொகை`,`المبلغ المستحق القبض`,`Monto por cobrar`,`Montant à recevoir`,`Zu erhaltender Betrag`],
+[`Dark mode`]:[`ഡാർക്ക് മോഡ്`,`डार्क मोड`,`இருண்ட பயன்முறை`,`الوضع الداكن`,`Modo oscuro`,`Mode sombre`,`Dunkelmodus`],
+[`Edit`]:[`തിരുത്തുക`,`संपादित करें`,`திருத்து`,`تعديل`,`Editar`,`Modifier`,`Bearbeiten`],
+[`Expeniq Secure`]:[`Expeniq സുരക്ഷിതം`,`Expeniq सुरक्षित`,`Expeniq பாதுகாப்பு`,`Expeniq آمن`,`Expeniq Seguro`,`Expeniq Sécurisé`,`Expeniq Gesichert`],
+[`Enter your 4-digit PIN`]:[`നിങ്ങളുടെ 4 അക്ക PIN നൽകുക`,`अपना 4 अंकों का PIN दर्ज करें`,`உங்கள் 4 இலக்க PIN ஐ உள்ளிடவும்`,`أدخل رمز PIN المكوّن من 4 أرقام`,`Introduce tu PIN de 4 dígitos`,`Saisissez votre PIN à 4 chiffres`,`Gib deine 4-stellige PIN ein`],
+[`Login / Unlock`]:[`ലോഗിൻ / അൺലോക്ക്`,`लॉगिन / अनलॉक`,`உள்நுழை / திற`,`تسجيل الدخول / فتح`,`Entrar / Desbloquear`,`Connexion / Déverrouiller`,`Anmelden / Entsperren`],
+[`Owner Recovery`]:[`ഉടമ വീണ്ടെടുക്കൽ`,`मालिक रिकवरी`,`உரிமையாளர் மீட்பு`,`استعادة المالك`,`Recuperación del propietario`,`Récupération du propriétaire`,`Inhaber-Wiederherstellung`],
+[`Verify Answer & Reset PIN`]:[`ഉത്തരം പരിശോധിച്ച് PIN റീസെറ്റ് ചെയ്യുക`,`उत्तर जांचें और PIN रीसेट करें`,`பதிலைச் சரிபார்த்து PIN ஐ மீட்டமை`,`تحقق من الإجابة وأعد تعيين PIN`,`Verificar respuesta y restablecer PIN`,`Vérifier la réponse et réinitialiser le PIN`,`Antwort prüfen & PIN zurücksetzen`],
+[`Enter & Confirm New 4-digit PIN`]:[`പുതിയ 4 അക്ക PIN നൽകി സ്ഥിരീകരിക്കുക`,`नया 4 अंकों का PIN दर्ज करें और पुष्टि करें`,`புதிய 4 இலக்க PIN ஐ உள்ளிட்டு உறுதிப்படுத்தவும்`,`أدخل رمز PIN جديدًا من 4 أرقام وأكّده`,`Introduce y confirma el nuevo PIN de 4 dígitos`,`Saisissez et confirmez le nouveau PIN à 4 chiffres`,`Neue 4-stellige PIN eingeben und bestätigen`],
+[`Save New PIN`]:[`പുതിയ PIN സേവ് ചെയ്യുക`,`नया PIN सेव करें`,`புதிய PIN ஐச் சேமி`,`حفظ PIN الجديد`,`Guardar nuevo PIN`,`Enregistrer le nouveau PIN`,`Neue PIN speichern`],
+[`Security Answer verified! Now set new PIN.`]:[`ഉത്തരം ശരിയാണ്! ഇനി പുതിയ PIN സെറ്റ് ചെയ്യുക.`,`उत्तर सही है! अब नया PIN सेट करें।`,`பதில் சரி! இப்போது புதிய PIN அமைக்கவும்.`,`تم التحقق من الإجابة! عيّن الآن PIN جديدًا.`,`¡Respuesta verificada! Ahora crea un nuevo PIN.`,`Réponse vérifiée ! Définissez maintenant un nouveau PIN.`,`Antwort bestätigt! Lege jetzt eine neue PIN fest.`],
+[`Incorrect Answer! Access denied.`]:[`ഉത്തരം തെറ്റാണ്! പ്രവേശനം നിഷേധിച്ചു.`,`गलत उत्तर! पहुंच अस्वीकृत।`,`தவறான பதில்! அணுகல் மறுக்கப்பட்டது.`,`إجابة خاطئة! تم رفض الوصول.`,`¡Respuesta incorrecta! Acceso denegado.`,`Réponse incorrecte ! Accès refusé.`,`Falsche Antwort! Zugriff verweigert.`],
+[`PINs do not match or invalid 4-digit PIN!`]:[`PIN-കൾ യോജിക്കുന്നില്ല അല്ലെങ്കിൽ 4 അക്ക PIN തെറ്റാണ്!`,`PIN मेल नहीं खाते या 4 अंकों का PIN अमान्य है!`,`PIN கள் பொருந்தவில்லை அல்லது 4 இலக்க PIN தவறானது!`,`رمزا PIN غير متطابقين أو PIN غير صالح من 4 أرقام!`,`¡Los PIN no coinciden o el PIN de 4 dígitos no es válido!`,`Les PIN ne correspondent pas ou le PIN à 4 chiffres est invalide !`,`PINs stimmen nicht überein oder ungültige 4-stellige PIN!`],
+[`Please provide a security answer!`]:[`ഒരു സുരക്ഷാ ഉത്തരം നൽകുക!`,`कृपया सुरक्षा उत्तर दें!`,`பாதுகாப்பு பதிலை வழங்கவும்!`,`يرجى إدخال إجابة الأمان!`,`¡Escribe una respuesta de seguridad!`,`Veuillez saisir une réponse de sécurité !`,`Bitte gib eine Sicherheitsantwort ein!`],
+[`Setup completed successfully!`]:[`സെറ്റപ്പ് വിജയകരമായി പൂർത്തിയായി!`,`सेटअप सफलतापूर्वक पूरा हुआ!`,`அமைப்பு வெற்றிகரமாக முடிந்தது!`,`اكتمل الإعداد بنجاح!`,`¡Configuración completada!`,`Configuration terminée !`,`Einrichtung abgeschlossen!`],
+[`Wrong PIN! Try again.`]:[`തെറ്റായ PIN! വീണ്ടും ശ്രമിക്കുക.`,`गलत PIN! फिर कोशिश करें।`,`தவறான PIN! மீண்டும் முயற்சிக்கவும்.`,`PIN خاطئ! حاول مرة أخرى.`,`¡PIN incorrecto! Inténtalo de nuevo.`,`PIN incorrect ! Réessayez.`,`Falsche PIN! Versuche es erneut.`],
+[`Please enter a valid amount!`]:[`ശരിയായ തുക നൽകുക!`,`कृपया सही राशि दर्ज करें!`,`சரியான தொகையை உள்ளிடவும்!`,`أدخل مبلغاً صحيحاً!`,`¡Ingresa un monto válido!`,`Entrez un montant valide !`,`Bitte gültigen Betrag eingeben!`],
+[`Please enter Bank or Account Name!`]:[`ബാങ്ക് / അക്കൗണ്ട് പേര് നൽകുക!`,`कृपया बैंक या खाते का नाम दर्ज करें!`,`வங்கி அல்லது கணக்கு பெயரை உள்ளிடவும்!`,`أدخل اسم البنك أو الحساب!`,`¡Ingresa el nombre del banco o cuenta!`,`Entrez le nom de la banque ou du compte !`,`Bitte Bank- oder Kontonamen eingeben!`],
+[`Please enter a valid balance amount!`]:[`ശരിയായ ബാലൻസ് തുക നൽകുക!`,`कृपया सही शेष राशि दर्ज करें!`,`சரியான இருப்புத் தொகையை உள்ளிடவும்!`,`أدخل رصيداً صحيحاً!`,`¡Ingresa un saldo válido!`,`Entrez un solde valide !`,`Bitte gültigen Saldo eingeben!`],
+[`Please enter Loan / Person Name!`]:[`ലോൺ / വ്യക്തിയുടെ പേര് നൽകുക!`,`कृपया ऋण / व्यक्ति का नाम दर्ज करें!`,`கடன் / நபர் பெயரை உள்ளிடவும்!`,`أدخل اسم القرض أو الشخص!`,`¡Ingresa el préstamo o nombre de la persona!`,`Entrez le prêt ou le nom de la personne !`,`Bitte Kredit oder Namen eingeben!`],
+[`Please enter a valid due amount!`]:[`അടയ്ക്കാനുള്ള ശരിയായ തുക നൽകുക!`,`कृपया सही देय राशि दर्ज करें!`,`சரியான நிலுவைத் தொகையை உள்ளிடவும்!`,`أدخل مبلغاً مستحقاً صحيحاً!`,`¡Ingresa un monto pendiente válido!`,`Entrez un montant dû valide !`,`Bitte gültigen fälligen Betrag eingeben!`],
+[`Please select a due date!`]:[`അവസാന തീയതി തിരഞ്ഞെടുക്കുക!`,`कृपया देय तिथि चुनें!`,`நிலுவை தேதியைத் தேர்ந்தெடுக்கவும்!`,`اختر تاريخ الاستحقاق!`,`¡Selecciona una fecha de vencimiento!`,`Sélectionnez une date d'échéance !`,`Bitte Fälligkeitsdatum wählen!`],
+[`Please enter 'From Whom' name!`]:[`'ആരിൽ നിന്ന്' എന്ന പേര് നൽകുക!`,`कृपया 'किससे' का नाम दर्ज करें!`,`'யாரிடமிருந்து' பெயரை உள்ளிடவும்!`,`أدخل اسم 'ممن'!`,`¡Ingresa el nombre en 'De quién'!`,`Entrez le nom « De qui » !`,`Bitte den Namen bei „Von wem“ eingeben!`],
+[`Please enter a valid receivable amount!`]:[`കിട്ടാനുള്ള ശരിയായ തുക നൽകുക!`,`कृपया सही प्राप्य राशि दर्ज करें!`,`பெற வேண்டிய சரியான தொகையை உள்ளிடவும்!`,`أدخل مبلغاً صحيحاً للمستحقات!`,`¡Ingresa un monto por cobrar válido!`,`Entrez une créance valide !`,`Bitte gültigen Forderungsbetrag eingeben!`],
+[`Due:`]:[`അവസാന തീയതി:`,`देय:`,`நிலுவை:`,`الاستحقاق:`,`Vence:`,`Échéance :`,`Fällig:`],
+[`Settled`]:[`തീർന്നു`,`निपटाया`,`தீர்க்கப்பட்டது`,`تمت التسوية`,`Saldado`,`Réglé`,`Beglichen`],
+[`Overdue {n}d`]:[`{n} ദിവസം വൈകി`,`{n} दिन अतिदेय`,`{n} நாள் தாமதம்`,`متأخر {n} يوم`,`Vencido hace {n} d`,`En retard de {n} j`,`{n} T. überfällig`],
+[`in {n}d`]:[`{n} ദിവസത്തിൽ`,`{n} दिन में`,`{n} நாளில்`,`خلال {n} يوم`,`en {n} d`,`dans {n} j`,`in {n} T.`],
+[`Received`]:[`ലഭിച്ചു`,`प्राप्त`,`பெறப்பட்டது`,`تم الاستلام`,`Recibido`,`Reçu`,`Erhalten`],
+[`Undo`]:[`തിരികെ`,`पूर्ववत`,`செயல்தவிர்`,`تراجع`,`Deshacer`,`Annuler`,`Rückgängig`],
+[`Mark settled`]:[`തീർന്നതായി അടയാളപ്പെടുത്തുക`,`निपटाया चिह्नित करें`,`தீர்க்கப்பட்டதாகக் குறி`,`وضع علامة تمت التسوية`,`Marcar como saldado`,`Marquer comme réglé`,`Als beglichen markieren`],
+[`N/A`]:[`ലഭ്യമല്ല`,`उपलब्ध नहीं`,`இல்லை`,`غير متاح`,`N/D`,`N/D`,`k. A.`],
+[`{n} loan(s) due soon`]:[`{n} ലോൺ ഉടൻ അടയ്ക്കണം`,`{n} ऋण जल्द देय`,`{n} கடன் விரைவில் செலுத்த வேண்டும்`,`{n} قرض مستحق قريباً`,`{n} préstamo(s) vence(n) pronto`,`{n} prêt(s) bientôt dû(s)`,`{n} Kredit(e) bald fällig`],
+[`{n} overdue`]:[`{n} വൈകി`,`{n} अतिदेय`,`{n} தாமதம்`,`{n} متأخر`,`{n} vencido(s)`,`{n} en retard`,`{n} überfällig`],
+[`{n} loan due date(s) need your attention`]:[`{n} ലോൺ അവസാന തീയതി ശ്രദ്ധിക്കേണ്ടതുണ്ട്`,`{n} ऋण की देय तिथि पर ध्यान दें`,`{n} கடன் நிலுவை தேதிக்கு உங்கள் கவனம் தேவை`,`{n} موعد استحقاق قرض يحتاج إلى انتباهك`,`{n} fecha(s) de vencimiento requieren tu atención`,`{n} échéance(s) de prêt demandent votre attention`,`{n} Kreditfälligkeit(en) brauchen deine Aufmerksamkeit`],
+[`Notifications are not supported on this device.`]:[`ഈ ഉപകരണത്തിൽ അറിയിപ്പുകൾ പിന്തുണയ്ക്കുന്നില്ല.`,`इस डिवाइस पर सूचनाएं समर्थित नहीं हैं।`,`இந்த சாதனத்தில் அறிவிப்புகள் ஆதரிக்கப்படவில்லை.`,`الإشعارات غير مدعومة على هذا الجهاز.`,`Este dispositivo no admite notificaciones.`,`Les notifications ne sont pas prises en charge sur cet appareil.`,`Benachrichtigungen werden auf diesem Gerät nicht unterstützt.`],
+[`Reminders enabled! You will be notified when the app opens.`]:[`റിമൈൻഡറുകൾ ഓണായി! ആപ്പ് തുറക്കുമ്പോൾ അറിയിപ്പ് ലഭിക്കും.`,`रिमाइंडर चालू हो गए! ऐप खुलने पर आपको सूचना मिलेगी।`,`நினைவூட்டல்கள் இயக்கப்பட்டன! ஆப் திறக்கும்போது அறிவிப்பு கிடைக்கும்.`,`تم تفعيل التذكيرات! ستصلك إشعارات عند فتح التطبيق.`,`¡Recordatorios activados! Recibirás un aviso al abrir la app.`,`Rappels activés ! Vous serez notifié à l'ouverture de l'appli.`,`Erinnerungen aktiviert! Du wirst beim Öffnen der App benachrichtigt.`],
+[`Notification permission was not granted.`]:[`അറിയിപ്പ് അനുമതി ലഭിച്ചില്ല.`,`सूचना की अनुमति नहीं मिली।`,`அறிவிப்பு அனுமதி வழங்கப்படவில்லை.`,`لم يتم منح إذن الإشعارات.`,`No se concedió el permiso de notificaciones.`,`L'autorisation de notification n'a pas été accordée.`,`Benachrichtigungsberechtigung wurde nicht erteilt.`],
+/* --- strings used by the account / modal helper (L) --- */
+[`Money moves from your bank to cash in hand. It is not counted as an expense.`]:[``,`पैसा आपके बैंक से हाथ के नकद में जाता है। इसे खर्च नहीं गिना जाएगा।`,`பணம் வங்கியிலிருந்து கையிலுள்ள பணத்துக்கு மாறுகிறது. இது செலவாகக் கணக்கிடப்படாது.`,`ينتقل المال من بنكك إلى النقد في يدك. لا يُحتسب كمصروف.`,`El dinero pasa de tu banco al efectivo. No se cuenta como gasto.`,`L'argent passe de votre banque aux espèces en main. Ce n'est pas compté comme une dépense.`,`Geld wechselt vom Bankkonto in dein Bargeld. Es zählt nicht als Ausgabe.`],
+[`Money moves from cash in hand to your bank. It is not counted as income.`]:[``,`पैसा हाथ के नकद से आपके बैंक में जाता है। इसे आय नहीं गिना जाएगा।`,`பணம் கையிலிருந்து வங்கிக்கு மாறுகிறது. இது வருமானமாகக் கணக்கிடப்படாது.`,`ينتقل المال من النقد في يدك إلى بنكك. لا يُحتسب كدخل.`,`El dinero pasa del efectivo a tu banco. No se cuenta como ingreso.`,`L'argent passe des espèces en main à votre banque. Ce n'est pas compté comme un revenu.`,`Geld wechselt von deinem Bargeld auf die Bank. Es zählt nicht als Einnahme.`],
+[`First add your bank in the Banks tab.`]:[``,`पहले बैंक टैब में अपना बैंक जोड़ें।`,`முதலில் வங்கி தாவலில் உங்கள் வங்கியைச் சேர்க்கவும்.`,`أضف بنكك أولاً من تبويب البنوك.`,`Primero añade tu banco en la pestaña Bancos.`,`Ajoutez d'abord votre banque dans l'onglet Banques.`,`Füge zuerst deine Bank im Tab Banken hinzu.`],
+[`Please choose a bank.`]:[``,`कृपया बैंक चुनें।`,`ஒரு வங்கியைத் தேர்ந்தெடுக்கவும்.`,`يرجى اختيار بنك.`,`Elige un banco.`,`Veuillez choisir une banque.`,`Bitte wähle eine Bank.`],
+[`Due`]:[``,`बकाया`,`நிலுவை`,`المستحق`,`Pendiente`,`Dû`,`Fällig`],
+[`Add Credit Card`]:[``,`क्रेडिट कार्ड जोड़ें`,`கிரெடிட் கார்டு சேர்`,`إضافة بطاقة ائتمان`,`Añadir tarjeta de crédito`,`Ajouter une carte de crédit`,`Kreditkarte hinzufügen`],
+[`Pay card bill from`]:[``,`कार्ड बिल कहाँ से चुकाएं`,`கார்டு பில்லை எங்கிருந்து செலுத்த`,`ادفع فاتورة البطاقة من`,`Pagar factura de tarjeta desde`,`Payer la facture de la carte depuis`,`Kartenabrechnung bezahlen von`],
+[`Enter an amount up to the due ({due}).`]:[``,`देय राशि ({due}) तक की राशि दर्ज करें।`,`நிலுவைத் தொகை ({due}) வரையிலான தொகையை உள்ளிடவும்.`,`أدخل مبلغاً لا يتجاوز المستحق ({due}).`,`Ingresa un monto de hasta el pendiente ({due}).`,`Entrez un montant jusqu'au dû ({due}).`,`Gib einen Betrag bis zur Fälligkeit ({due}) ein.`],
+[`Please enter only a name. Never enter a card number.`]:[``,`कृपया केवल नाम दर्ज करें। कार्ड नंबर कभी दर्ज न करें।`,`பெயரை மட்டும் உள்ளிடவும். கார்டு எண்ணை ஒருபோதும் உள்ளிட வேண்டாம்.`,`أدخل اسماً فقط. لا تدخل رقم البطاقة أبداً.`,`Escribe solo un nombre. Nunca introduzcas un número de tarjeta.`,`Saisissez seulement un nom. Ne saisissez jamais de numéro de carte.`,`Bitte nur einen Namen eingeben. Niemals eine Kartennummer.`],
+[`Enter only a card name and the amount you owe. Do not enter card numbers or dates.`]:[``,`केवल कार्ड का नाम और बकाया राशि दर्ज करें। कार्ड नंबर या तारीख दर्ज न करें।`,`கார்டின் பெயரையும் செலுத்த வேண்டிய தொகையையும் மட்டும் உள்ளிடவும். கார்டு எண் அல்லது தேதிகளை உள்ளிட வேண்டாம்.`,`أدخل اسم البطاقة والمبلغ المستحق فقط. لا تدخل أرقام البطاقات أو التواريخ.`,`Introduce solo el nombre de la tarjeta y lo que debes. No introduzcas números de tarjeta ni fechas.`,`Saisissez uniquement le nom de la carte et le montant dû. Ne saisissez ni numéros de carte ni dates.`,`Gib nur den Kartennamen und den offenen Betrag ein. Keine Kartennummern oder Daten.`],
+[`Pay bill`]:[``,`बिल चुकाएं`,`பில் செலுத்து`,`دفع الفاتورة`,`Pagar factura`,`Payer la facture`,`Rechnung bezahlen`],
+[`This card has no due amount.`]:[``,`इस कार्ड पर कोई बकाया नहीं है।`,`இந்த கார்டில் நிலுவைத் தொகை இல்லை.`,`لا يوجد مبلغ مستحق على هذه البطاقة.`,`Esta tarjeta no tiene saldo pendiente.`,`Cette carte n'a aucun montant dû.`,`Diese Karte hat keinen offenen Betrag.`],
+[`Edit credit card`]:[``,`क्रेडिट कार्ड संपादित करें`,`கிரெடிட் கார்டைத் திருத்து`,`تعديل بطاقة الائتمان`,`Editar tarjeta de crédito`,`Modifier la carte de crédit`,`Kreditkarte bearbeiten`],
+[`Card name (e.g. HDFC Credit Card)`]:[``,`कार्ड का नाम (जैसे HDFC क्रेडिट कार्ड)`,`கார்டு பெயர் (எ.கா. HDFC கிரெடிட் கார்டு)`,`اسم البطاقة (مثل بطاقة HDFC)`,`Nombre de tarjeta (p. ej. HDFC Crédito)`,`Nom de la carte (p. ex. HDFC Crédit)`,`Kartenname (z. B. HDFC Kreditkarte)`],
+[`A refund cannot be more than the due ({due}).`]:[``,`रिफंड बकाया ({due}) से अधिक नहीं हो सकता।`,`திரும்பப்பெறுதல் நிலுவையை ({due}) விட அதிகமாக இருக்க முடியாது.`,`لا يمكن أن يزيد الاسترداد عن المستحق ({due}).`,`Un reembolso no puede superar lo pendiente ({due}).`,`Un remboursement ne peut pas dépasser le dû ({due}).`,`Eine Erstattung darf den offenen Betrag ({due}) nicht übersteigen.`],
+[`This entry cannot be edited. Delete it and add again.`]:[``,`यह प्रविष्टि संपादित नहीं हो सकती। इसे हटाकर फिर जोड़ें।`,`இந்த பதிவைத் திருத்த முடியாது. நீக்கி மீண்டும் சேர்க்கவும்.`,`لا يمكن تعديل هذا الإدخال. احذفه وأضفه من جديد.`,`Esta entrada no se puede editar. Elimínala y añádela de nuevo.`,`Cette entrée ne peut pas être modifiée. Supprimez-la et ajoutez-la à nouveau.`,`Dieser Eintrag kann nicht bearbeitet werden. Lösche ihn und füge ihn neu hinzu.`],
+[`Which bank?`]:[``,`कौन सा बैंक?`,`எந்த வங்கி?`,`أي بنك؟`,`¿Qué banco?`,`Quelle banque ?`,`Welche Bank?`],
+[`To pay by UPI or Card, first add your bank in the Banks tab.`]:[``,`UPI या कार्ड से भुगतान के लिए पहले बैंक टैब में अपना बैंक जोड़ें।`,`UPI அல்லது கார்டில் செலுத்த, முதலில் வங்கி தாவலில் உங்கள் வங்கியைச் சேர்க்கவும்.`,`للدفع عبر UPI أو البطاقة، أضف بنكك أولاً من تبويب البنوك.`,`Para pagar con UPI o tarjeta, primero añade tu banco en la pestaña Bancos.`,`Pour payer par UPI ou carte, ajoutez d'abord votre banque dans l'onglet Banques.`,`Für Zahlungen per UPI oder Karte füge zuerst deine Bank im Tab Banken hinzu.`],
+[`Paying through your bank using UPI? Choose that bank instead. Use UPI only for a wallet balance such as GPay or Paytm.`]:[``,`बैंक से UPI द्वारा भुगतान कर रहे हैं? उसके बजाय वही बैंक चुनें। UPI केवल GPay या Paytm जैसे वॉलेट बैलेंस के लिए चुनें।`,`வங்கி மூலம் UPI இல் செலுத்துகிறீர்களா? அந்த வங்கியைத் தேர்ந்தெடுக்கவும். GPay அல்லது Paytm போன்ற வாலட் இருப்புக்கு மட்டும் UPI ஐப் பயன்படுத்தவும்.`,`هل تدفع عبر بنكك باستخدام UPI؟ اختر ذلك البنك بدلاً من ذلك. استخدم UPI فقط لرصيد محفظة مثل GPay أو Paytm.`,`¿Pagas con UPI desde tu banco? Elige ese banco. Usa UPI solo para saldo de billetera como GPay o Paytm.`,`Vous payez par UPI via votre banque ? Choisissez plutôt cette banque. Utilisez UPI uniquement pour un solde de portefeuille comme GPay ou Paytm.`,`Zahlst du per UPI über deine Bank? Wähle stattdessen diese Bank. Nutze UPI nur für Wallet-Guthaben wie GPay oder Paytm.`],
+[`Balance of "{name}" was set to 0 because that money was already spent.`]:[``,`“{name}” का शेष 0 कर दिया गया क्योंकि वह पैसा पहले ही खर्च हो चुका था।`,`“{name}” இருப்பு 0 ஆக்கப்பட்டது, ஏனெனில் அந்தப் பணம் ஏற்கனவே செலவாகிவிட்டது.`,`تم تعيين رصيد «{name}» إلى 0 لأن هذا المال أُنفق بالفعل.`,`El saldo de «{name}» se puso en 0 porque ese dinero ya se gastó.`,`Le solde de « {name} » a été mis à 0 car cet argent était déjà dépensé.`,`Der Saldo von „{name}“ wurde auf 0 gesetzt, da das Geld bereits ausgegeben wurde.`],
+[`Not enough balance in "{name}" (available {bal}). Add income first, or fix the balance with the ✏️ button.`]:[``,`“{name}” में पर्याप्त शेष नहीं है (उपलब्ध {bal})। पहले आय जोड़ें, या ✏️ बटन से शेष ठीक करें।`,`“{name}” இல் போதுமான இருப்பு இல்லை (உள்ளது {bal}). முதலில் வருமானம் சேர்க்கவும், அல்லது ✏️ பொத்தானால் இருப்பைச் சரிசெய்யவும்.`,`لا يوجد رصيد كافٍ في «{name}» (المتاح {bal}). أضف دخلاً أولاً أو صحّح الرصيد بزر ✏️.`,`No hay saldo suficiente en «{name}» (disponible {bal}). Añade un ingreso primero o corrige el saldo con el botón ✏️.`,`Solde insuffisant dans « {name} » (disponible {bal}). Ajoutez d'abord un revenu ou corrigez le solde avec le bouton ✏️.`,`Nicht genug Guthaben in „{name}“ (verfügbar {bal}). Füge zuerst eine Einnahme hinzu oder korrigiere den Saldo mit der ✏️-Taste.`],
+[`Cannot delete: "{name}" balance would go below zero (available {bal}).`]:[``,`हटाया नहीं जा सकता: “{name}” का शेष शून्य से नीचे चला जाएगा (उपलब्ध {bal})।`,`நீக்க முடியாது: “{name}” இருப்பு பூஜ்ஜியத்துக்குக் கீழே செல்லும் (உள்ளது {bal}).`,`لا يمكن الحذف: سيصبح رصيد «{name}» أقل من الصفر (المتاح {bal}).`,`No se puede eliminar: el saldo de «{name}» quedaría por debajo de cero (disponible {bal}).`,`Suppression impossible : le solde de « {name} » passerait sous zéro (disponible {bal}).`,`Löschen nicht möglich: Der Saldo von „{name}“ würde unter null fallen (verfügbar {bal}).`],
+[`Balance cannot be negative.`]:[``,`शेष राशि ऋणात्मक नहीं हो सकती।`,`இருப்பு எதிர்மறையாக இருக்க முடியாது.`,`لا يمكن أن يكون الرصيد سالباً.`,`El saldo no puede ser negativo.`,`Le solde ne peut pas être négatif.`,`Der Saldo darf nicht negativ sein.`],
+[`To choose UPI / Card / Net Banking, first select a bank, wallet or card account above. Cash payments have no method.`]:[``,`UPI / कार्ड / नेट बैंकिंग चुनने के लिए पहले ऊपर बैंक, वॉलेट या कार्ड खाता चुनें। नकद भुगतान में कोई तरीका नहीं होता।`,`UPI / கார்டு / நெட் பேங்கிங் தேர்வு செய்ய, முதலில் மேலே வங்கி, வாலட் அல்லது கார்டு கணக்கைத் தேர்ந்தெடுக்கவும். பணம் செலுத்துதலுக்கு முறை தேவையில்லை.`,`لاختيار UPI / بطاقة / الخدمات المصرفية عبر الإنترنت، اختر أولاً حساباً بنكياً أو محفظة أو بطاقة أعلاه. الدفع النقدي ليس له طريقة.`,`Para elegir UPI / Tarjeta / Banca en línea, primero selecciona arriba un banco, billetera o tarjeta. El pago en efectivo no tiene método.`,`Pour choisir UPI / Carte / Net Banking, sélectionnez d'abord un compte bancaire, portefeuille ou carte ci-dessus. Les paiements en espèces n'ont pas de méthode.`,`Um UPI / Karte / Net Banking zu wählen, wähle oben zuerst Bank, Wallet oder Karte. Barzahlungen haben keine Methode.`],
+[`Not counted (other)`]:[`കണക്കിൽ ഇല്ല (മറ്റുള്ളവ)`,`गिना नहीं गया (अन्य)`,`கணக்கில் இல்லை (மற்றவை)`,`غير محتسب (أخرى)`,`No contado (otro)`,`Non compté (autre)`,`Nicht gezählt (sonstige)`]
+};
+const _EMO=/^([^\p{L}\p{N}{(]+?\s+)(.+)$/u;
+function trKey(s){
+ const i=UI_L.indexOf(lang);if(i<0)return s;
+ let a=UI[s];if(a&&a[i])return a[i];
+ const mm=_EMO.exec(s);if(mm){a=UI[mm[2]];if(a&&a[i])return mm[1]+a[i];}
+ return s;
+}
+function hasKey(s){if(UI[s])return true;const mm=_EMO.exec(s);return !!(mm&&UI[mm[2]]);}
+function Tx(s,v){let r=trKey(s);if(v)for(const k in v)r=r.split('{'+k+'}').join(v[k]);return r;}
+const CATK={General:'General',Fitness:'Fitness & Gym',Clothing:'Clothing',Beauty:'Beauty & Salon',Pets:'Pets',Home:'Home & Repairs',Savings:'Savings & Investment',Subscriptions:'Subscriptions',Travel:'Travel & Fuel',Hospital:'Hospital',Medical:'Medical',Education:'Education',Recharge:'Mobile & Internet',Entertainment:'Entertainment',Insurance:'Insurance',Gifts:'Gifts & Donations',Food:'Food & Dining',Grocery:'Grocery',Bills:'Bills & Utilities',Shopping:'Shopping',Rent:'Rent',Salary:'Salary',Loan:'Loan Payment',Received:'Money Received',Other:'Other','ATM Withdrawal':'ATM Withdrawal','Cash Deposit':'Cash Deposit','Card Bill':'Card Bill'};
+const catName=c=>((lang!=='en'||c==='Travel'||c==='Recharge'||c==='Gifts'||c==='Fitness'||c==='Beauty'||c==='Home'||c==='Savings')&&CATK[c])?Tx(CATK[c]):c;
+const modeName=md=>(md==='Debit Card'||md==='Card')?Tx(md):md;
+/* tag static text / placeholders / titles once, so they can be re-translated whenever the language changes */
+const i18nTxt=[],i18nAttr=[];
+function tagI18n(){
+ const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
+ while(n=w.nextNode()){
+  if(n.parentElement.closest('script,style,#privBody'))continue;
+  const raw=n.nodeValue,s=raw.replace(/\s+/g,' ').trim();
+  if(s&&hasKey(s))i18nTxt.push({n,en:s,pre:raw.match(/^\s*/)[0],suf:raw.match(/\s*$/)[0]});
+ }
+ document.querySelectorAll('[placeholder],[title],[aria-label]').forEach(e=>['placeholder','title','aria-label'].forEach(a=>{
+  if(e.hasAttribute(a)){const s=e.getAttribute(a).replace(/\s+/g,' ').trim();if(hasKey(s))i18nAttr.push({e,a,en:s});}
+ }));
+}
+function applyI18n(){
+ i18nTxt.forEach(o=>{if(o.n.isConnected)o.n.nodeValue=o.pre+Tx(o.en)+o.suf;});
+ i18nAttr.forEach(o=>o.e.setAttribute(o.a,Tx(o.en)));
+}
+tagI18n();
+function genId(){return 'b'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+const r2=n=>Math.round(n*100)/100;
+const isCash=t=>!t.acc||t.acc==='cash';
+const BI={cash:{k:'cashOpen',cls:'ct-cash',icon:'💵'}};
+const isBI=t=>!t.acc||BI[t.acc]!==undefined;
+const biName=id=>L('cashInHand');
+const isNone=t=>t.acc==='none';
+const TYPE_ICON={bank:'🏦',wallet:'📱',card:'💳',other:'🪙'};
+const bIcon=b=>TYPE_ICON[b.type]||'🏦';
+/* add (sign=1) or undo (sign=-1) a transaction's effect on its bank account. Cash is derived, so nothing to do for it. */
+const looksLikeCardNo=v=>(String(v).match(/\d/g)||[]).length>=8;
+const creditOf=id=>(typeof id==='string'&&id.indexOf('c:')===0)?(db.loans.find(l=>'c:'+l.id===id&&l.kind==='credit'&&!l.done)||null):null;
+const creditDelta=t=>(t.type==='expense'?t.amount:-t.amount);
+function applyEffect(t,sign){
+ if(!t||isBI(t)||isNone(t))return;
+ const cl=creditOf(t.acc);
+ if(cl){cl.amount=r2(cl.amount+sign*creditDelta(t));return;}
+ const b=db.banks.find(x=>x.id===t.acc);if(!b)return;
+ b.bal=r2(b.bal+sign*(t.type==='income'?t.amount:-t.amount));
+}
+function accName(t){
+ if(isBI(t))return L('cash');
+ if(isNone(t))return L('noAcc');
+ const cc=db.loans.find(l=>'c:'+l.id===t.acc);
+ if(cc)return cc.name;
+ const b=db.banks.find(x=>x.id===t.acc);
+ return b?b.name:(t.accLabel?t.accLabel+' ('+L('deleted')+')':L('deleted'));
+}
+function accInfo(t){const b=db.banks.find(x=>x.id===t.acc);const ic=isBI(t)?BI[t.acc||'cash'].icon:isNone(t)?'➖':(String(t.acc).indexOf('c:')===0?'💳':(b?bIcon(b):'🏦'));return ' · '+ic+' '+esc(accName(t))+(t.mode?' · '+esc(modeName(t.mode)):'');}
+/* ---- Edit bank / cash balance ---- */
+let balTarget=null;
+function openBal(target){
+ balTarget=target;
+ const g=id=>document.getElementById(id),isCashT=!!BI[target];
+ if(typeof target==='string'&&target.indexOf('c:')===0){
+  const cl=db.loans[parseInt(target.slice(2),10)];if(!cl)return;
+  g('balTitle').innerText=L('editCardTitle');g('balName').placeholder=L('cardNamePH');g('balValue').placeholder=L('dueWord');
+  g('balCancel').innerText=L('cancel');g('balSave').innerText=L('save');
+  g('balName').style.display='block';g('balName').value=cl.name;g('balValue').value=cl.amount;g('balErr').style.display='none';
+  g('balModal').style.display='flex';return;
+ }
+ g('balTitle').innerText=(target==='cash')?L('editCashTitle'):(isCashT?biName(target):L('editTitle'));
+ g('balName').placeholder=L('lblName');g('balValue').placeholder=L('lblBal');
+ g('balCancel').innerText=L('cancel');g('balSave').innerText=L('save');
+ g('balName').style.display=isCashT?'none':'block';
+ g('balErr').style.display='none';
+ if(isCashT){g('balValue').value=calcTotals()[target];}
+ else{g('balName').value=db.banks[target].name;g('balValue').value=db.banks[target].bal;}
+ g('balModal').style.display='flex';
+}
+function editBank(i){if(db.banks[i])openBal(i);}
+function editCash(){openBal('cash');}
+function editBI(id){openBal(id);}
+function balClose(ok){
+ const g=id=>document.getElementById(id);
+ if(!ok){g('balModal').style.display='none';balTarget=null;return;}
+ const v=parseFloat(g('balValue').value);
+ if(isNaN(v)){showFieldError('balErr',L('badNum'));return;}
+ if(v<0){showFieldError('balErr',L('badNeg'));return;}
+ if(typeof balTarget==='string'&&balTarget.indexOf('c:')===0){
+  const cl=db.loans[parseInt(balTarget.slice(2),10)];
+  const nm=g('balName').value.trim();
+  if(!nm){showFieldError('balErr',L('badName'));return;}
+  if(looksLikeCardNo(nm)){showFieldError('balErr',L('noCardNo'));return;}
+  if(cl){cl.name=nm;cl.amount=r2(v);}
+  g('balModal').style.display='none';balTarget=null;saveData();return;
+ }
+ if(BI[balTarget]){
+  const k=BI[balTarget].k,txnPart=calcTotals()[balTarget]-(db[k]||0);
+  db[k]=r2(v-txnPart);
+ }else{
+  const name=g('balName').value.trim();
+  if(!name){showFieldError('balErr',L('badName'));return;}
+  const b=db.banks[balTarget];if(!b){g('balModal').style.display='none';return;}
+  b.name=name;b.bal=r2(v);
+ }
+ g('balModal').style.display='none';balTarget=null;saveData();
+}
+function updateAccLabel(){
+ const g=id=>document.getElementById(id);
+ g('txnType').className=g('txnType').value==='income'?'t-income':'t-expense';
+ g('lblAcc').innerText=g('txnType').value==='income'?L('recvIn'):L('payFrom');
+}
+const txDelta=t=>(t.type==='income'?t.amount:-t.amount);
+function accBalOf(id){return BI[id]?calcTotals()[id]:(db.banks.find(b=>b.id===id)||{}).bal;}
+function accDisplay(id){if(BI[id])return biName(id);const cc=db.loans.find(l=>'c:'+l.id===id);if(cc)return cc.name;return (db.banks.find(b=>b.id===id)||{}).name||'';}
+/* ops = [[accountId, delta], ...]. Returns the first account that would be pushed below zero, else null. */
+function negCheck(ops){
+ const sum={};
+ ops.forEach(o=>{sum[o[0]]=(sum[o[0]]||0)+o[1];});
+ for(const a in sum){
+  const cur=accBalOf(a);
+  if(cur===undefined)continue;
+  const nb=r2(cur+sum[a]);
+  if(nb<0&&nb<cur)return{name:accDisplay(a),bal:cur};
+ }
+ return null;
+}
+let lastFixed=[];
+/* No balance may ever be below zero: raise any negative one back to 0 */
+function fixNeg(){
+ const names=[],T=calcTotals();
+ ['cash'].forEach(id=>{const v=T[id];if(r2(v)<0){const k=BI[id].k;db[k]=r2((db[k]||0)-v);names.push(biName(id));}});
+ db.banks.forEach(b=>{if(r2(b.bal)<0){b.bal=0;names.push(b.name);}});
+ db.loans.forEach(l=>{if(l.kind==='credit'&&r2(l.amount)<0){l.amount=0;names.push(l.name);}});
+ lastFixed=names;return names;
+}
+function fixedMsg(){return L('clamped').replace('{name}',lastFixed.join(', '));}
+function availFor(accId,o){
+ let bal=accBalOf(accId);if(bal===undefined)return undefined;
+ if(o&&(o.acc||'cash')===accId)bal-=txDelta(o);
+ return Math.max(0,r2(bal));
+}
+/* replace an existing transaction; if removing the old one would leave its account below zero, that account is reset to 0 first */
+function editTxnApply(o,vals){
+ const oldAcc=o.acc||'cash';
+ if(BI[oldAcc]){const b1=calcTotals()[oldAcc]-txDelta(o);if(b1<0)db[BI[oldAcc].k]=r2(db[BI[oldAcc].k]-b1);}
+ else{applyEffect(o,-1);const bk=db.banks.find(x=>x.id===oldAcc);if(bk&&bk.bal<0)bk.bal=0;const ck=creditOf(oldAcc);if(ck&&ck.amount<0)ck.amount=0;}
+ Object.assign(o,vals);applyEffect(o,1);
+}
+function negMsg(key,bad){return L(key).replace('{name}',bad.name).replace('{bal}',currency+bad.bal.toFixed(2));}
+function chipsHtml(cur,o){
+ o=o||{};
+ const mode=o.mode||'',modeOn=!!o.methods&&(mode==='UPI'||mode==='Card'||mode==='Debit Card');
+ const f=n=>(n<0?'\u2212':'')+currency+Math.abs(n).toFixed(2),T=calcTotals();
+ const chip=(id,cls,icon,name,sub,sel)=>'<button type="button" class="chip '+cls+(sel?' sel':'')+'" data-id="'+esc(id)+'"><span>'+icon+' '+esc(name)+'</span><small>'+esc(sub)+'</small></button>';
+ let html='';
+ if(o.cash!==false)html+=chip('cash','ct-cash','💵',biName('cash'),f(T.cash),cur==='cash');
+ if(o.methods){
+  const cb=db.banks.find(x=>x.id===cur);
+  [['UPI','ct-upi','📱'],['Debit Card','ct-debit','💳']].forEach(m=>{
+   const sel=modeOn&&(mode===m[0]||(m[0]==='Debit Card'&&mode==='Card'))&&!!cb;
+   html+=chip('@'+m[0],m[1],m[2],modeName(m[0]),sel?cb.name:L('viaBank'),sel);
+  });
+ }
+ db.banks.forEach(bk=>{html+=chip(bk.id,'ct-'+(TYPE_ICON[bk.type]?bk.type:'bank'),bIcon(bk),bk.name,f(bk.bal),cur===bk.id&&!modeOn);});
+ if(o.credit)db.loans.forEach(l=>{if(l.kind==='credit'&&!l.done){const id='c:'+l.id;html+=chip(id,'ct-card','💳',l.name,L('dueWord')+' '+f(l.amount),cur===id);}});
+ if(o.add)html+='<button type="button" class="chip chip-new" data-id="__new"><span>➕</span><small>'+esc(L('addNew'))+'</small></button>';
+ return html;
+}
+/* ---- ATM Withdrawal (bank -> cash) and Cash Deposit (cash -> bank). Not income, not expense. ---- */
+let cashFlow=null;
+function openCash(dir){
+ if(!db.banks.length){showFieldError('txnError',L('needBankAtm'),false,5000);return;}
+ const g=id=>document.getElementById(id);
+ cashFlow={dir,acc:db.banks.length===1?db.banks[0].id:''};
+ g('cashTitle').innerText=dir==='out'?'🏧 '+L('atmOut'):'🏦 '+L('cashIn');
+ g('cashSub').innerText=dir==='out'?L('atmOutSub'):L('cashInSub');
+ g('cashCancel').innerText=L('cancel');g('cashOk').innerText=L('confirmBtn');g('cashAmt').placeholder=L('amountPH');
+ g('cashAmt').value='';g('cashErr').style.display='none';
+ g('cashChips').innerHTML=chipsHtml(cashFlow.acc,{cash:false});
+ g('cashModal').style.display='flex';
+}
+function cashClose(ok){
+ const g=id=>document.getElementById(id);
+ if(!ok||!cashFlow){g('cashModal').style.display='none';cashFlow=null;return;}
+ if(!cashFlow.acc){showFieldError('cashErr',L('pickBankFirst'),false,4000);return;}
+ const amt=r2(parseFloat(g('cashAmt').value));
+ if(isNaN(amt)||amt<=0){showFieldError('cashErr',L('badNum'),false,4000);return;}
+ const out=cashFlow.dir==='out',src=out?cashFlow.acc:'cash',dst=out?'cash':cashFlow.acc;
+ const bad=negCheck([[src,-amt]]);
+ if(bad){showFieldError('cashErr',negMsg('negBlock',bad),false,6000);return;}
+ const now=new Date(),ds=now.toLocaleDateString()+' '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+ const ref='xf:'+genId(),cat=out?'ATM Withdrawal':'Cash Deposit',bn=accDisplay(cashFlow.acc);
+ const mk=(acc,type)=>({category:cat,desc:bn,amount:amt,type,acc,mode:'',date:ds,ts:now.getTime(),ref,xfer:true});
+ const t1=mk(src,'expense'),t2=mk(dst,'income');
+ db.txns.push(t1);applyEffect(t1,1);
+ db.txns.push(t2);applyEffect(t2,1);
+ g('cashModal').style.display='none';cashFlow=null;
+ saveData();
+}
+/* UPI / Card are ways to pay from a bank: pick which bank */
+let pickMode='';
+function setPay(accId,mode){
+ document.getElementById('txnAcc').value=accId;
+ document.getElementById('txnMode').value=mode||'';
+ renderChips();
+}
+function useMethod(m){
+ if(!db.banks.length){showFieldError('txnError',L('needBank'),false,5000);return;}
+ if(db.banks.length===1){setPay(db.banks[0].id,m);return;}
+ pickMode=m;
+ document.getElementById('pickTitle').innerText=m+' \u2014 '+L('pickBank');
+ document.getElementById('pickCancel').innerText=L('cancel');
+ document.getElementById('pickChips').innerHTML=chipsHtml(document.getElementById('txnAcc').value,{cash:false});
+ document.getElementById('pickModal').style.display='flex';
+}
+function closePick(){document.getElementById('pickModal').style.display='none';pickMode='';}
+/* ---- Pay a loan / receive a pending amount through an account ---- */
+let settle=null;
+function openSettle(type,i){
+ const it=db[type][i];if(!it)return;
+ const isCr=type==='loans'&&it.kind==='credit';
+ settle={type,i,acc:'cash',credit:isCr};
+ const g=id=>document.getElementById(id);
+ g('settleTitle').innerText=isCr?L('payBillFrom'):(type==='loans'?L('payFrom'):L('recvIn'));
+ g('settleAmt').style.display=isCr?'block':'none';if(isCr)g('settleAmt').value=it.amount;
+ g('settleSub').innerText=it.name+' \u2014 '+currency+it.amount.toFixed(2);
+ g('settleCancel').innerText=L('cancel');g('settleOk').innerText=L('confirmBtn');
+ g('settleErr').style.display='none';
+ g('settleChips').innerHTML=chipsHtml(settle.acc);
+ g('settleModal').style.display='flex';
+}
+function settleClose(ok){
+ const g=id=>document.getElementById(id);
+ if(!ok||!settle){g('settleModal').style.display='none';settle=null;return;}
+ const it=db[settle.type][settle.i];
+ if(!it){g('settleModal').style.display='none';settle=null;return;}
+ if(settle.credit){
+  const amt=parseFloat(g('settleAmt').value);
+  if(isNaN(amt)||amt<=0||amt>it.amount+0.001){showFieldError('settleErr',L('badBillAmt').replace('{due}',currency+it.amount.toFixed(2)),false,6000);return;}
+  const bad2=negCheck([[settle.acc,-amt]]);
+  if(bad2){showFieldError('settleErr',negMsg('negBlock',bad2),false,6000);return;}
+  const n2=new Date();
+  const t2={category:'Card Bill',desc:it.name,amount:amt,type:'expense',acc:settle.acc,mode:'',date:n2.toLocaleDateString()+' '+n2.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),ts:n2.getTime(),ref:'pay:'+it.id,xfer:true};
+  db.txns.push(t2);applyEffect(t2,1);it.amount=r2(it.amount-amt);
+  g('settleModal').style.display='none';settle=null;saveData();return;
+ }
+ const isLoan=settle.type==='loans',amount=it.amount;
+ if(isLoan){const bad=negCheck([[settle.acc,-amount]]);if(bad){showFieldError('settleErr',negMsg('negBlock',bad),false,6000);return;}}
+ const now=new Date();
+ const t={category:isLoan?'Loan':'Received',desc:it.name,amount,type:isLoan?'expense':'income',acc:settle.acc,mode:'',date:now.toLocaleDateString()+' '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),ts:now.getTime(),ref:settle.type+':'+it.id};
+ db.txns.push(t);applyEffect(t,1);
+ it.done=true;it.sacc=settle.acc;
+ g('settleModal').style.display='none';settle=null;
+ saveData();
+}
+function renderChips(){
+ const h=document.getElementById('txnAcc');
+ let cur=h.value||'cash';
+ if(!BI[cur]&&!db.banks.some(b=>b.id===cur)&&!creditOf(cur))cur='cash';
+ h.value=cur;
+ const mh=document.getElementById('txnMode');
+ if(cur==='cash'||creditOf(cur))mh.value='';
+ const html=chipsHtml(cur,{methods:true,add:true,credit:true,mode:mh.value});
+ const box=document.getElementById('accChips');
+ const prev=box.scrollLeft;
+ box.innerHTML=html;
+ box.scrollLeft=prev;
+ const sel=box.querySelector('.sel');
+ if(sel){const r=sel.getBoundingClientRect(),c=box.getBoundingClientRect();if(r.left<c.left||r.right>c.right)box.scrollLeft+=r.left-c.left-8;}
+}
+function fillAccOptions(){renderChips();}
+function updateSummaries(){
+ const T=calcTotals(),f=n=>currency+n.toFixed(2),today=new Date().toDateString();
+ let ti=0,te=0;
+ db.txns.forEach(t=>{if(!t.xfer&&tDate(t).toDateString()===today){if(t.type==='income')ti+=t.amount;else te+=t.amount;}});
+ const set=(id,l,v,sub)=>{document.getElementById(id).innerHTML='<span>'+l+(sub?'<br><small>'+sub+'</small>':'')+'</span><b>'+v+'</b>';};
+ set('sumDaily',esc(L('sumDaily')),'<span style="color:var(--income)">+'+f(ti)+'</span> <span style="color:var(--expense)">−'+f(te)+'</span>');
+ set('sumBank',esc(L('sumBank')),f(T.bank));
+ document.getElementById('cashBox').innerHTML='<span>'+BI.cash.icon+' '+esc(biName('cash'))+'</span><b>'+f(T.cash)+' <button class="mini-btn" onclick="editBI(\'cash\')" aria-label="'+esc(Tx('Edit'))+'">✏️</button></b>';
+ set('sumLoan',esc(L('sumLoan')),f(T.loan));
+ set('sumRec',esc(L('sumRec')),f(T.rec));
+}
+
+/* Net balance = Cash + all bank balances + pending receivables - pending loans.
+   Bank transactions already change the bank balance, so only Cash transactions are counted separately. */
+function calcTotals(){
+ let inc=0,exp=0,bank=0,cash=db.cashOpen||0,loan=0,rec=0;
+ db.txns.forEach(t=>{
+  if(!t.xfer){if(t.type==='income')inc+=t.amount;else exp+=t.amount;}
+  const d=(t.type==='income'?t.amount:-t.amount);
+  if(isCash(t))cash+=d;
+ });
+ db.banks.forEach(b=>bank+=b.bal);
+ db.loans.forEach(l=>{if(!l.done)loan+=l.amount;});
+ db.receivables.forEach(r=>{if(!r.done)rec+=r.amount;});
+ return{inc,exp,bank,cash,loan,rec,net:cash+bank+rec-loan};
+}
+function toggleBalance(){
+ const el=document.getElementById("totalNetBalance"),eye=document.getElementById("toggle-eye");
+ actualBalance=`${currency}${calcTotals().net.toFixed(2)}`;
+ if(isHidden){el.innerText=actualBalance;eye.innerText="👁️";isHidden=false;}
+ else{el.innerText=currency+"••••••";eye.innerText="🙈";isHidden=true;}
+}
+
+function renderLoginTexts(){
+ const g=id=>document.getElementById(id);
+ const M={login:['Expeniq Secure','Enter your 4-digit PIN','Login / Unlock','Enter your Secret Answer'],
+  setup:['Setup New PIN','Create PIN, Confirm PIN & Security Question','Set PIN & Start','Enter your Secret Answer'],
+  reset:['Setup New PIN','Enter & Confirm New 4-digit PIN','Save New PIN','Enter new Secret Answer'],
+  recover:['Owner Recovery',null,'Verify Answer & Reset PIN','Enter your Secret Answer']}[loginMode];
+ g('loginTitle').innerText=Tx(M[0]);
+ g('loginDesc').innerText=loginMode==='recover'?Tx(localStorage.getItem('co_user_q')||'What is your favorite food?'):Tx(M[1]);
+ g('loginBtn').innerText=Tx(M[2]);g('secAnswerInput').placeholder=Tx(M[3]);
+}
+function showForgotPin(){
+ isRecovering=true;loginMode='recover';
+ const g=id=>document.getElementById(id);
+ renderLoginTexts();
+ g('pinInput').style.display='none';g('confirmPinDiv').style.display='none';
+ g('setupSecQDiv').style.display='block';g('secQuestion').style.display='none';
+ g('forgotPinLink').style.display='none';g('statusMsg').style.display='none';
+}
+function handleLogin(){
+ const g=id=>document.getElementById(id);
+ if(isRecovering){
+  const a=g('secAnswerInput').value.trim().toLowerCase();
+  if(a===savedAns){
+   showMessage(Tx("Security Answer verified! Now set new PIN."),true);
+   isRecovering=false;isSettingUp=true;
+   loginMode='reset';renderLoginTexts();
+   g('pinInput').style.display='block';g('confirmPinDiv').style.display='block';
+   g('pinInput').value='';g('confirmPinInput').value='';
+   g('secQuestion').style.display='block';g('secAnswerInput').value='';
+  }else showMessage(Tx("Incorrect Answer! Access denied."),false);
+  return;
+ }
+ const pin=g('pinInput').value;
+ if(isSettingUp){
+  const cp=g('confirmPinInput').value,q=g('secQuestion').value,a=g('secAnswerInput').value.trim().toLowerCase();
+  if(pin.length!==4||pin!==cp){showMessage(Tx("PINs do not match or invalid 4-digit PIN!"),false);return;}
+  if(!a){showMessage(Tx("Please provide a security answer!"),false);return;}
+  localStorage.setItem('co_user_pin',pin);localStorage.setItem('co_user_q',q);localStorage.setItem('co_user_ans',a);
+  savedPin=pin;savedAns=a;isSettingUp=false;playBeep();
+  g('loginScreen').style.display='none';loginMode='login';showMessage(Tx("Setup completed successfully!"),true);
+ }else{
+  if(pin===savedPin){playBeep();g('loginScreen').style.display='none';g('pinInput').value='';g('statusMsg').style.display='none';}
+  else{showMessage(Tx("Wrong PIN! Try again."),false);g('pinInput').value='';}
+ }
+}
+function handleLogout(){
+ const g=id=>document.getElementById(id);
+ g('pinInput').value='';g('confirmPinInput').value='';g('secAnswerInput').value='';
+ g('pinInput').style.display='block';g('confirmPinDiv').style.display='none';g('setupSecQDiv').style.display='none';
+ loginMode='login';renderLoginTexts();g('forgotPinLink').style.display='block';g('statusMsg').style.display='none';
+ isSettingUp=false;isRecovering=false;g('loginScreen').style.display='flex';
+}
+function saveData(){
+ fixNeg();localStorage.setItem('co_db_colored_lock',JSON.stringify(db));playBeep();render();}
+function updateCurrency(){currency=document.getElementById('currencySelect').value;localStorage.setItem('co_curr',currency);render();}
+
+/* ---- Transactions (add + edit) ---- */
+function addTransaction(){
+ const category=document.getElementById('txnCategory').value;
+ const desc=document.getElementById('txnDesc').value.trim()||category;
+ const amount=parseFloat(document.getElementById('txnAmount').value);
+ const type=document.getElementById('txnType').value;
+ if(isNaN(amount)||amount<=0){showFieldError('txnError',Tx('Please enter a valid amount!'));return;}
+ const now=new Date();
+ const dateStr=now.toLocaleDateString()+' '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+ const acc=document.getElementById('txnAcc').value||'cash',mode=document.getElementById('txnMode').value;
+ const isEditNow=editIdx!==null&&!!db.txns[editIdx];
+ let bad=null;
+ if(isEditNow){const av=availFor(acc,db.txns[editIdx]);if(av!==undefined&&type==='expense'&&av-amount<0)bad={name:accDisplay(acc),bal:av};}
+ else bad=negCheck([[acc,txDelta({type,amount})]]);
+ if(bad){showFieldError('txnError',negMsg('negBlock',bad),false,7000);return;}
+ const crd=creditOf(acc);
+ if(crd&&type==='income'){let base=crd.amount;if(isEditNow&&db.txns[editIdx].acc===acc)base-=creditDelta(db.txns[editIdx]);base=Math.max(0,base);if(amount>base){showFieldError('txnError',L('refundTooMuch').replace('{due}',currency+base.toFixed(2)),false,7000);return;}}
+ if(editIdx!==null&&db.txns[editIdx]){const t=db.txns[editIdx];editTxnApply(t,{category,desc,amount,type,acc,mode});cancelEdit(false);}
+ else{const t={category,desc,amount,type,acc,mode,date:dateStr,ts:now.getTime()};db.txns.push(t);applyEffect(t,1);}
+ document.getElementById('txnDesc').value='';document.getElementById('txnAmount').value='';document.getElementById('txnMode').value='';
+ document.getElementById('txnCategory').value='General';document.getElementById('txnAcc').value='cash';
+ saveData();
+ if(lastFixed.length)showFieldError('txnError',fixedMsg(),true,7000);
+}
+function editTxn(i){
+ const t=db.txns[i];if(!t)return;
+ if(t.ref&&/^(pay|xf):/.test(String(t.ref))){showFieldError('txnError',L('noEditBill'),false,5000);return;}
+ editIdx=i;
+ document.getElementById('txnCategory').value=t.category;
+ document.getElementById('txnDesc').value=t.desc;
+ document.getElementById('txnAmount').value=t.amount;
+ document.getElementById('txnType').value=t.type;
+ fillAccOptions();
+ document.getElementById('txnAcc').value=(BI[t.acc]||db.banks.some(b=>b.id===t.acc)||creditOf(t.acc))?t.acc:'cash';
+ document.getElementById('txnMode').value=t.mode||'';
+ updateAccLabel();renderChips();
+ document.getElementById('btnAddTxn').innerText="✏️ "+Tx("Update Transaction");
+ document.getElementById('btnCancelEdit').style.display='block';
+ switchTab('tabTxn',document.getElementById('tabBtnTxn'));
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function cancelEdit(clear){
+ editIdx=null;
+ document.getElementById('btnCancelEdit').style.display='none';
+ applyLanguage();
+ if(clear){document.getElementById('txnDesc').value='';document.getElementById('txnAmount').value='';document.getElementById('txnCategory').value='General';document.getElementById('txnMode').value='';document.getElementById('txnAcc').value='cash';renderChips();}
+}
+
+function addBankAccount(){
+ const name=document.getElementById('bankName').value.trim(),bal=parseFloat(document.getElementById('bankBalance').value);
+ if(!name){showFieldError('bankError',Tx('Please enter Bank or Account Name!'));return;}
+ if(isNaN(bal)){showFieldError('bankError',Tx('Please enter a valid balance amount!'));return;}
+ if(bal<0){showFieldError('bankError',L('badNeg'));return;}
+ db.banks.push({id:genId(),name,bal,type:document.getElementById('bankType').value});
+ document.getElementById('bankName').value='';document.getElementById('bankBalance').value='';saveData();
+}
+function updateLoanForm(){
+ const g=id=>document.getElementById(id),cr=g('loanKind').value==='credit';
+ g('loanDateWrap').style.display=cr?'none':'block';
+ g('loanAmtWrap').style.gridColumn=cr?'1 / -1':'';
+ g('loanName').placeholder=cr?L('cardNamePH'):Tx('Loan / Person Name');
+ g('loanAmount').placeholder=cr?L('dueWord'):Tx('Due Amount');
+ g('creditNote').style.display=cr?'block':'none';g('creditNote').innerText=L('creditNote');
+ g('btnAddLoan').innerText=cr?L('addCredit'):(texts[lang]||texts.en).addLoan;
+}
+function creditRow(l,i){
+ return `<li class="item-row"><span><b>💳 ${esc(l.name)}</b><br><small style="color:var(--loan)">${esc(L('creditLbl'))}</small></span><span style="text-align:right;white-space:nowrap">${esc(L('dueWord'))} ${currency}${l.amount.toFixed(2)}<div class="row-actions" style="margin-top:4px"><button class="mini-btn" onclick="payBill(${i})">💸 ${esc(L('payBill'))}</button> <button class="mini-btn" onclick="openBal('c:${i}')">✏️</button> <button class="del-btn" onclick="deleteItem('loans',${i})">X</button></div></span></li>`;
+}
+function payBill(i){
+ const l=db.loans[i];if(!l)return;
+ if(l.amount<=0){showFieldError('loanError',L('noDue'),false,3500);return;}
+ openSettle('loans',i);
+}
+function addLoan(){
+ const name=document.getElementById('loanName').value.trim(),amount=parseFloat(document.getElementById('loanAmount').value),date=document.getElementById('loanDate').value;
+ if(!name){showFieldError('loanError',Tx('Please enter Loan / Person Name!'));return;}
+ if(looksLikeCardNo(name)){showFieldError('loanError',L('noCardNo'));return;}
+ if(document.getElementById('loanKind').value==='credit'){
+  if(isNaN(amount)||amount<0){showFieldError('loanError',Tx('Please enter a valid due amount!'));return;}
+  db.loans.push({id:genId(),name,amount:r2(amount),date:'',done:false,kind:'credit'});
+ }else{
+  if(isNaN(amount)||amount<=0){showFieldError('loanError',Tx('Please enter a valid due amount!'));return;}
+  if(!date){showFieldError('loanError',Tx('Please select a due date!'));return;}
+  db.loans.push({id:genId(),name,amount,date,done:false});
+ }
+ document.getElementById('loanName').value='';document.getElementById('loanAmount').value='';document.getElementById('loanDate').value='';saveData();
+}
+function addReceivable(){
+ const name=document.getElementById('recName').value.trim(),amount=parseFloat(document.getElementById('recAmount').value);
+ if(!name){showFieldError('recError',Tx("Please enter 'From Whom' name!"));return;}
+ if(isNaN(amount)||amount<=0){showFieldError('recError',Tx('Please enter a valid receivable amount!'));return;}
+ db.receivables.push({id:genId(),name,amount,done:false});
+ document.getElementById('recName').value='';document.getElementById('recAmount').value='';saveData();
+}
+function toggleDone(type,i){
+ const it=db[type][i];if(!it)return;
+ if(!it.done){openSettle(type,i);return;}
+ const k=type+':'+it.id,ti=db.txns.findIndex(t=>t.ref===k);
+ if(ti>=0){
+  if(editIdx!==null){if(ti===editIdx)cancelEdit(true);else if(ti<editIdx)editIdx--;}
+  applyEffect(db.txns[ti],-1);db.txns.splice(ti,1);
+ }
+ it.done=false;delete it.sacc;
+ saveData();
+ if(lastFixed.length)showFieldError(type==='loans'?'loanError':'recError',fixedMsg(),true,6000);
+}
+const DEL_DEFAULT='Are you sure you want to remove this? This action cannot be undone.';
+function deleteItem(type,index){
+ deleteTargetType=type;deleteTargetIndex=index;
+ let msg=Tx(DEL_DEFAULT);
+ if(type==='banks'&&db.banks[index]){
+  const b=db.banks[index],n=db.txns.filter(t=>t.acc===b.id).length;
+  msg=L('delBank').replace('{name}',b.name).replace('{bal}',currency+b.bal.toFixed(2)).replace('{n}',n);
+ }
+ document.getElementById('delText').innerText=msg;
+ document.getElementById('customModal').style.display='flex';
+}
+function closeModal(ok){
+ document.getElementById('customModal').style.display='none';
+ if(ok&&deleteTargetType!==''&&deleteTargetIndex!==null){
+  if(editIdx!==null)cancelEdit(true);
+  let pairIdx=-1;
+  if(deleteTargetType==='txns'){const dt=db.txns[deleteTargetIndex];applyEffect(dt,-1);
+   if(dt&&dt.ref&&String(dt.ref).indexOf('xf:')===0){pairIdx=db.txns.findIndex((x,k)=>k!==deleteTargetIndex&&x.ref===dt.ref);if(pairIdx>=0)applyEffect(db.txns[pairIdx],-1);}
+   if(dt&&dt.ref&&String(dt.ref).indexOf('pay:')===0){const cl=db.loans.find(l=>l.id===String(dt.ref).slice(4));if(cl)cl.amount=r2(cl.amount+dt.amount);}}
+  if(deleteTargetType==='banks'){const bk=db.banks[deleteTargetIndex];if(bk)db.txns.forEach(t=>{if(t.acc===bk.id)t.accLabel=bk.name;});}
+  db[deleteTargetType].splice(deleteTargetIndex,1);
+  if(pairIdx>=0)db.txns.splice(pairIdx>deleteTargetIndex?pairIdx-1:pairIdx,1);
+  saveData();
+  if(lastFixed.length)showFieldError('txnError',fixedMsg(),true,7000);
+ }
+ deleteTargetType='';deleteTargetIndex=null;
+}
+
+/* ---- Due dates ---- */
+function daysTo(d){const a=new Date(d+'T00:00:00'),n=new Date();n.setHours(0,0,0,0);return Math.round((a-n)/864e5);}
+function dueTag(l){
+ if(l.done)return' · ✔ '+Tx('Settled');
+ const n=daysTo(l.date);
+ return n<0?' · ⚠️ '+Tx('Overdue {n}d',{n:-n}):n===0?' · ⏰ '+Tx('Today'):n<=3?' · ⏰ '+Tx('in {n}d',{n}):'';
+}
+function updateDueBanner(){
+ const due=db.loans.filter(l=>!l.done&&l.kind!=='credit'&&l.date&&daysTo(l.date)<=3);
+ const b=document.getElementById('dueBanner');
+ if(!due.length){b.style.display='none';return;}
+ const over=due.filter(l=>daysTo(l.date)<0).length;
+ b.style.display='block';
+ b.innerText='⏰ '+Tx('{n} loan(s) due soon',{n:due.length})+(over?' ('+Tx('{n} overdue',{n:over})+')':'')+': '+due.map(l=>l.name).join(', ');
+ if('Notification' in window&&Notification.permission==='granted'){
+  const k=new Date().toDateString();
+  if(localStorage.getItem('co_notif')!==k){
+   localStorage.setItem('co_notif',k);
+   const msg=Tx('{n} loan due date(s) need your attention',{n:due.length});
+   if(navigator.serviceWorker&&navigator.serviceWorker.ready)navigator.serviceWorker.ready.then(r=>r.showNotification('Expeniq',{body:msg,icon:'./icon-192.png'})).catch(()=>{try{new Notification('Expeniq',{body:msg});}catch(e){}});
+   else try{new Notification('Expeniq',{body:msg});}catch(e){}
+  }
+ }
+}
+function enableNotif(){
+ if(!('Notification' in window)){showFieldError('repMsg',Tx('Notifications are not supported on this device.'));return;}
+ Notification.requestPermission().then(p=>{
+  if(p==='granted'){showFieldError('repMsg',Tx('Reminders enabled! You will be notified when the app opens.'),true);localStorage.removeItem('co_notif');updateDueBanner();}
+  else showFieldError('repMsg',Tx('Notification permission was not granted.'));
+ });
+}
+
+/* ---- Report ---- */
+const mkey=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+function tDate(t){if(t.ts)return new Date(t.ts);const d=new Date(t.date);return isNaN(d)?new Date():d;}
+function renderReport(){
+ const m=document.getElementById('repMonth');if(!m.value)m.value=mkey(new Date());
+ let inc=0,exp=0;const cats={},tr={};
+ for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);tr[mkey(d)]={i:0,e:0};}
+ db.txns.forEach(t=>{
+  if(t.xfer)return;
+  const k=mkey(tDate(t));
+  if(tr[k])tr[k][t.type==='income'?'i':'e']+=t.amount;
+  if(k===m.value){if(t.type==='income')inc+=t.amount;else{exp+=t.amount;cats[t.category]=(cats[t.category]||0)+t.amount;}}
+ });
+ document.getElementById('repInc').innerText=currency+inc.toFixed(2);
+ document.getElementById('repExp').innerText=currency+exp.toFixed(2);
+ const rows=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+ document.getElementById('repCats').innerHTML=rows.length?rows.map(([c,v])=>`<div class="bar-row"><div style="display:flex;justify-content:space-between"><span>${esc(catName(c))}</span><b>${currency}${v.toFixed(2)} (${(v/exp*100).toFixed(0)}%)</b></div><div class="bar" style="width:${(v/rows[0][1]*100).toFixed(0)}%"></div></div>`).join(''):'<p style="font-size:.85rem;color:#64748b">No expenses this month.</p>';
+ const mx=Math.max(1,...Object.values(tr).map(x=>Math.max(x.i,x.e)));
+ document.getElementById('repTrend').innerHTML=Object.entries(tr).map(([k,v])=>`<div><div class="pair"><i style="height:${v.i/mx*100}%;background:var(--income)"></i><i style="height:${v.e/mx*100}%;background:var(--expense)"></i></div>${k.slice(5)}/${k.slice(2,4)}</div>`).join('');
+}
+
+/* ---- Backup / Export / Import ---- */
+/* Returns 'shared' | 'downloaded' | 'cancel' | 'failed' */
+async function saveFile(name,text,type){
+ /* 1) Native share sheet (best on phones: pick Drive / Files / WhatsApp) */
+ try{
+  const f=new File([text],name,{type});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){
+   try{await navigator.share({files:[f],title:name});return 'shared';}
+   catch(e){if(e&&e.name==='AbortError')return 'cancel';}
+  }
+ }catch(e){}
+ /* 2) Normal browser download */
+ try{
+  const blob=new Blob([text],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=name;a.style.display='none';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},10000);
+  return 'downloaded';
+ }catch(e){return 'failed';}
+}
+function backupString(){
+ return JSON.stringify({app:'Expeniq',version:2,exported:new Date().toISOString(),currency,db},null,1);
+}
+async function exportJSON(){
+ const stamp=new Date().toISOString().slice(0,10);
+ const r=await saveFile(`expeniq-backup-${stamp}.json`,backupString(),'application/json');
+ if(r==='cancel')return;
+ if(r==='shared')showFieldError('repMsg',m('shareDone'),true,6000);
+ else if(r==='downloaded')showFieldError('repMsg',m('dlStarted'),true,9000);
+ else showFieldError('repMsg',m('saveFail'),false,7000);
+}
+async function copyBackup(){
+ const t=backupString();
+ try{
+  if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(t);}
+  else throw 0;
+ }catch(e){
+  try{
+   const ta=document.createElement('textarea');
+   ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+   document.body.appendChild(ta);ta.focus();ta.select();ta.setSelectionRange(0,t.length);
+   const ok=document.execCommand('copy');ta.remove();
+   if(!ok)throw 0;
+  }catch(e2){
+   const box=document.getElementById('importText');
+   box.value=t;box.focus();box.select();
+   showFieldError('repMsg',m('copyFail'),false,8000);
+   return;
+  }
+ }
+ showFieldError('repMsg',m('copied'),true,6000);
+}
+function exportCSV(){
+ const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+ const rows=[['Date','Category','Description','Type','Amount']].concat(db.txns.map(t=>[tDate(t).toISOString().slice(0,10),t.category,t.desc,t.type,t.amount]));
+ const stamp=new Date().toISOString().slice(0,10);
+ saveFile(`expeniq-transactions-${stamp}.csv`,'\ufeff'+rows.map(r=>r.map(q).join(',')).join('\n'),'text/csv').then(r=>{
+  if(r==='cancel')return;
+  showFieldError('repMsg',r==='shared'?m('csvShare'):m('csvDl'),r!=='failed',6000);
+ });
+}
+function num(v){const n=Number(v);return isFinite(n)?n:0;}
+function parseBackup(text){
+ text=String(text).replace(/^\uFEFF/,'').trim();
+ const o=JSON.parse(text),d=(o&&o.db)?o.db:o;
+ if(!d||!(Array.isArray(d.txns)||Array.isArray(d.banks)||Array.isArray(d.loans)||Array.isArray(d.receivables)))throw new Error('bad');
+ const arr=x=>Array.isArray(x)?x:[];
+ return{
+  currency:o.currency,
+  db:{
+   txns:arr(d.txns).map(t=>({category:String(t.category||'General'),desc:String(t.desc||''),amount:num(t.amount),type:t.type==='income'?'income':'expense',acc:(t.acc&&t.acc!=='none'&&t.acc!=='upi'&&t.acc!=='card')?String(t.acc):'cash',mode:t.mode?String(t.mode):(t.acc==='upi'?'UPI':t.acc==='card'?'Card':''),date:t.date?String(t.date):'',ts:typeof t.ts==='number'?t.ts:undefined,ref:t.ref?String(t.ref):undefined,xfer:t.xfer?true:undefined})),
+   banks:arr(d.banks).map(b=>({id:b.id?String(b.id):genId(),name:String(b.name||''),bal:num(b.bal),type:b.type||'bank'})),
+   loans:arr(d.loans).map(l=>({id:l.id?String(l.id):genId(),name:String(l.name||''),amount:num(l.amount),date:String(l.date||''),done:!!l.done,sacc:l.sacc?String(l.sacc):undefined,kind:l.kind==='credit'?'credit':undefined})),
+   receivables:arr(d.receivables).map(r=>({id:r.id?String(r.id):genId(),name:String(r.name||''),amount:num(r.amount),done:!!r.done,sacc:r.sacc?String(r.sacc):undefined})),
+   cashOpen:num(d.cashOpen)+num(d.upiOpen)+num(d.cardOpen)
+  }
+ };
+}
+function applyImport(text){
+ let parsed;
+ try{parsed=parseBackup(text);}
+ catch(e){showFieldError('repMsg',m('invalid'),false,6000);return;}
+ const n=parsed.db;
+ askConfirm(m('confirmImport',n),()=>{
+  db=n;
+  if(parsed.currency){currency=parsed.currency;localStorage.setItem('co_curr',currency);document.getElementById('currencySelect').value=currency;}
+  saveData();
+  document.getElementById('importText').value='';
+  showFieldError('repMsg',m('restored'),true,5000);
+ });
+}
+function importJSON(ev){
+ const file=ev.target.files&&ev.target.files[0];
+ if(!file)return;
+ const r=new FileReader();
+ r.onload=()=>{applyImport(r.result);ev.target.value='';};
+ r.onerror=()=>{showFieldError('repMsg',m('readFail'),false,5000);ev.target.value='';};
+ r.readAsText(file);
+}
+function importFromText(){
+ const t=document.getElementById('importText').value;
+ if(!t.trim()){showFieldError('repMsg',m('pasteFirst'),false,4000);return;}
+ applyImport(t);
+}
+
+/* ---- Render ---- */
+function render(){
+ const q=document.getElementById('searchTxn').value.toLowerCase();
+ const txnList=document.getElementById('txnList');let h='';
+ for(let idx=db.txns.length-1;idx>=0;idx--){const t=db.txns[idx];
+  if(q&&!t.desc.toLowerCase().includes(q)&&!t.category.toLowerCase().includes(q)&&!catName(t.category).toLowerCase().includes(q))continue;
+  const color=t.type==='income'?'var(--income)':'var(--expense)',sign=t.type==='income'?'+':'-';
+  h+=`<li class="item-row"><span><b>[${esc(catName(t.category))}]</b> ${esc(t.desc)}<br><small style="color:#64748b">📅 ${esc(t.date||Tx('N/A'))}${accInfo(t)}</small></span><span style="color:${color};font-weight:600;text-align:right;white-space:nowrap">${sign}${currency}${t.amount.toFixed(2)} <button class="mini-btn" onclick="editTxn(${idx})" style="margin-left:6px">✏️</button> <button class="del-btn" onclick="deleteItem('txns',${idx})">X</button></span></li>`;
+ }
+ txnList.innerHTML=h;
+
+ document.getElementById('bankList').innerHTML=db.banks.map((b,i)=>`<li class="item-row"><span><b>${bIcon(b)} ${esc(b.name)}</b></span><span>${currency}${b.bal.toFixed(2)} <button class="mini-btn" onclick="editBank(${i})">✏️</button> <button class="del-btn" onclick="deleteItem('banks',${i})">X</button></span></li>`).join('');
+
+ const row=(type,i,left,amt,done)=>`<li class="item-row ${done?'done':''}"><span>${left}</span><span style="white-space:nowrap">${currency}${amt.toFixed(2)} <button class="mini-btn" title="${esc(Tx(done?'Undo':'Mark settled'))}" onclick="toggleDone('${type}',${i})">${done?'↩️':'✅'}</button> <button class="del-btn" onclick="deleteItem('${type}',${i})">X</button></span></li>`;
+ document.getElementById('loanList').innerHTML=db.loans.map((l,i)=>l.kind==='credit'?creditRow(l,i):row('loans',i,`<b>${esc(l.name)}</b><br><small style="color:var(--loan)">${esc(Tx('Due:'))} ${esc(l.date)}${dueTag(l)}${l.done&&l.sacc&&accDisplay(l.sacc)?' · '+esc(accDisplay(l.sacc)):''}</small>`,l.amount,l.done)).join('');
+ document.getElementById('recList').innerHTML=db.receivables.map((r,i)=>row('receivables',i,`<b>${esc(r.name)}</b>${r.done?'<br><small style="color:#64748b">✔ '+esc(Tx('Received'))+(r.sacc&&accDisplay(r.sacc)?' · '+esc(accDisplay(r.sacc)):'')+'</small>':''}`,r.amount,r.done)).join('');
+
+ const T=calcTotals();
+ document.getElementById('totalIncomeDisplay').innerText=`${currency}${T.inc.toFixed(2)}`;
+ document.getElementById('totalExpenseDisplay').innerText=`${currency}${T.exp.toFixed(2)}`;
+ actualBalance=`${currency}${T.net.toFixed(2)}`;
+ document.getElementById('totalNetBalance').innerText=isHidden?currency+"••••••":actualBalance;
+ fillAccOptions();updateSummaries();renderReport();updateDueBanner();
+}
+
+/* ---- Auto-lock: lock when app was in background for more than AUTO_LOCK_MS ---- */
+const AUTO_LOCK_MS=30000;
+let hiddenAt=null;
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){hiddenAt=Date.now();return;}
+ const away=hiddenAt?Date.now()-hiddenAt:0;hiddenAt=null;
+ const unlocked=document.getElementById('loginScreen').style.display==='none';
+ if(unlocked&&away>=AUTO_LOCK_MS){
+  ['privacyModal','confirmModal','customModal','balModal','settleModal','pickModal','cashModal'].forEach(i=>document.getElementById(i).style.display='none');
+  balTarget=null;settle=null;pickMode='';confirmCb=null;cashFlow=null;
+  handleLogout();
+ }
+});
+
+document.getElementById('accChips').addEventListener('click',e=>{
+ const c=e.target.closest('[data-id]');if(!c)return;
+ const id=c.getAttribute('data-id');
+ if(id==='__new'){switchTab('tabBank',document.getElementById('tabBtnBank'));return;}
+ if(id.charAt(0)==='@'){useMethod(id.slice(1));return;}
+ setPay(id,'');
+});
+if(fixNeg().length){try{localStorage.setItem('co_db_colored_lock',JSON.stringify(db));}catch(e){}}
+document.getElementById('cashChips').addEventListener('click',e=>{
+ const c=e.target.closest('[data-id]');if(!c||!cashFlow)return;
+ cashFlow.acc=c.getAttribute('data-id');
+ document.getElementById('cashChips').innerHTML=chipsHtml(cashFlow.acc,{cash:false});
+});
+document.getElementById('pickChips').addEventListener('click',e=>{
+ const c=e.target.closest('[data-id]');if(!c)return;
+ const m=pickMode;closePick();setPay(c.getAttribute('data-id'),m);
+});
+document.getElementById('settleChips').addEventListener('click',e=>{
+ const c=e.target.closest('[data-id]');if(!c||!settle)return;
+ settle.acc=c.getAttribute('data-id');
+ document.getElementById('settleChips').innerHTML=chipsHtml(settle.acc);
+});
+applyLanguage();
+render();
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+ window.addEventListener('load',()=>{
+  navigator.serviceWorker.register('./service-worker.js').then(()=>console.log('Service Worker registered!')).catch(e=>console.log('Service Worker registration failed: ',e));
+ });
+}
+</script>
+</body>
+</html>
