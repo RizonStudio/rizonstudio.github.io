@@ -354,6 +354,26 @@ let lang=localStorage.getItem('co_lang')||'en';
 let soundEnabled=localStorage.getItem('co_sound')!=='false';
 let savedPin=localStorage.getItem('co_user_pin');
 let savedAns=localStorage.getItem('co_user_ans');
+/* PIN / answer are stored as salted SHA-256 hashes ("h1:salt:hex"). Old plain-text values are accepted once and upgraded on next successful login. */
+async function _hash(val,salt){
+ const str=salt+':'+val;
+ try{if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}}catch(e){}
+ let h1=0x811c9dc5,h2=0x1b873593;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);h1=Math.imul(h1^c,16777619);h2=Math.imul(h2+c,2246822519);}
+ return ('00000000'+(h1>>>0).toString(16)).slice(-8)+('00000000'+(h2>>>0).toString(16)).slice(-8);
+}
+async function hashSecret(val){const salt=Math.random().toString(36).slice(2)+Date.now().toString(36);return 'h1:'+salt+':'+await _hash(val,salt);}
+async function checkSecret(val,stored){
+ if(!stored)return false;
+ if(stored.indexOf('h1:')!==0)return val===stored;
+ const parts=stored.split(':');return await _hash(val,parts[1])===parts[2];
+}
+function lockLeftMin(){const u=+localStorage.getItem('co_pin_lock')||0;const left=u-Date.now();return left>0?Math.ceil(left/60000):0;}
+function registerFail(){
+ let n=(+localStorage.getItem('co_pin_fail')||0)+1;
+ if(n>=5){localStorage.setItem('co_pin_lock',String(Date.now()+5*60000));n=0;}
+ localStorage.setItem('co_pin_fail',String(n));
+}
+function clearFails(){localStorage.removeItem('co_pin_fail');localStorage.removeItem('co_pin_lock');}
 let isSettingUp=!savedPin;
 let isRecovering=false;
 let loginMode=isSettingUp?'setup':'login';
@@ -637,6 +657,7 @@ const UI={
 [`PINs do not match or invalid 4-digit PIN!`]:[`PIN-കൾ യോജിക്കുന്നില്ല അല്ലെങ്കിൽ 4 അക്ക PIN തെറ്റാണ്!`,`PIN मेल नहीं खाते या 4 अंकों का PIN अमान्य है!`,`PIN கள் பொருந்தவில்லை அல்லது 4 இலக்க PIN தவறானது!`,`رمزا PIN غير متطابقين أو PIN غير صالح من 4 أرقام!`,`¡Los PIN no coinciden o el PIN de 4 dígitos no es válido!`,`Les PIN ne correspondent pas ou le PIN à 4 chiffres est invalide !`,`PINs stimmen nicht überein oder ungültige 4-stellige PIN!`],
 [`Please provide a security answer!`]:[`ഒരു സുരക്ഷാ ഉത്തരം നൽകുക!`,`कृपया सुरक्षा उत्तर दें!`,`பாதுகாப்பு பதிலை வழங்கவும்!`,`يرجى إدخال إجابة الأمان!`,`¡Escribe una respuesta de seguridad!`,`Veuillez saisir une réponse de sécurité !`,`Bitte gib eine Sicherheitsantwort ein!`],
 [`Setup completed successfully!`]:[`സെറ്റപ്പ് വിജയകരമായി പൂർത്തിയായി!`,`सेटअप सफलतापूर्वक पूरा हुआ!`,`அமைப்பு வெற்றிகரமாக முடிந்தது!`,`اكتمل الإعداد بنجاح!`,`¡Configuración completada!`,`Configuration terminée !`,`Einrichtung abgeschlossen!`],
+[`Too many wrong attempts. Try again in {m} min.`]:[`കൂടുതൽ തെറ്റായ ശ്രമങ്ങൾ. {m} മിനിറ്റ് കഴിഞ്ഞ് ശ്രമിക്കുക.`,`बहुत ज़्यादा गलत प्रयास। {m} मिनट बाद फिर कोशिश करें।`,`அதிக தவறான முயற்சிகள். {m} நிமிடம் கழித்து முயற்சிக்கவும்.`,`محاولات خاطئة كثيرة. حاول مرة أخرى بعد {m} دقيقة.`,`Demasiados intentos fallidos. Inténtalo de nuevo en {m} min.`,`Trop de tentatives échouées. Réessayez dans {m} min.`,`Zu viele Fehlversuche. Versuche es in {m} Min. erneut.`],
 [`Wrong PIN! Try again.`]:[`തെറ്റായ PIN! വീണ്ടും ശ്രമിക്കുക.`,`गलत PIN! फिर कोशिश करें।`,`தவறான PIN! மீண்டும் முயற்சிக்கவும்.`,`PIN خاطئ! حاول مرة أخرى.`,`¡PIN incorrecto! Inténtalo de nuevo.`,`PIN incorrect ! Réessayez.`,`Falsche PIN! Versuche es erneut.`],
 [`Please enter a valid amount!`]:[`ശരിയായ തുക നൽകുക!`,`कृपया सही राशि दर्ज करें!`,`சரியான தொகையை உள்ளிடவும்!`,`أدخل مبلغاً صحيحاً!`,`¡Ingresa un monto válido!`,`Entrez un montant valide !`,`Bitte gültigen Betrag eingeben!`],
 [`Please enter Bank or Account Name!`]:[`ബാങ്ക് / അക്കൗണ്ട് പേര് നൽകുക!`,`कृपया बैंक या खाते का नाम दर्ज करें!`,`வங்கி அல்லது கணக்கு பெயரை உள்ளிடவும்!`,`أدخل اسم البنك أو الحساب!`,`¡Ingresa el nombre del banco o cuenta!`,`Entrez le nom de la banque ou du compte !`,`Bitte Bank- oder Kontonamen eingeben!`],
@@ -1011,18 +1032,24 @@ function showForgotPin(){
  g('setupSecQDiv').style.display='block';g('secQuestion').style.display='none';
  g('forgotPinLink').style.display='none';g('statusMsg').style.display='none';
 }
-function handleLogin(){
+let _loginBusy=false;
+async function handleLogin(){
+ if(_loginBusy)return;
  const g=id=>document.getElementById(id);
+ if(!isSettingUp||isRecovering){const m=lockLeftMin();if(m){showMessage(Tx("Too many wrong attempts. Try again in {m} min.",{m:m}),false);g('pinInput').value='';return;}}
+ _loginBusy=true;
+ try{
  if(isRecovering){
   const a=g('secAnswerInput').value.trim().toLowerCase();
-  if(a===savedAns){
+  if(await checkSecret(a,savedAns)){
+   clearFails();
    showMessage(Tx("Security Answer verified! Now set new PIN."),true);
    isRecovering=false;isSettingUp=true;
    loginMode='reset';renderLoginTexts();
    g('pinInput').style.display='block';g('confirmPinDiv').style.display='block';
    g('pinInput').value='';g('confirmPinInput').value='';
    g('secQuestion').style.display='block';g('secAnswerInput').value='';
-  }else showMessage(Tx("Incorrect Answer! Access denied."),false);
+  }else{registerFail();const m=lockLeftMin();showMessage(m?Tx("Too many wrong attempts. Try again in {m} min.",{m:m}):Tx("Incorrect Answer! Access denied."),false);}
   return;
  }
  const pin=g('pinInput').value;
@@ -1030,13 +1057,19 @@ function handleLogin(){
   const cp=g('confirmPinInput').value,q=g('secQuestion').value,a=g('secAnswerInput').value.trim().toLowerCase();
   if(pin.length!==4||pin!==cp){showMessage(Tx("PINs do not match or invalid 4-digit PIN!"),false);return;}
   if(!a){showMessage(Tx("Please provide a security answer!"),false);return;}
-  localStorage.setItem('co_user_pin',pin);localStorage.setItem('co_user_q',q);localStorage.setItem('co_user_ans',a);
-  savedPin=pin;savedAns=a;isSettingUp=false;playBeep();
+  const hp=await hashSecret(pin),ha=await hashSecret(a);
+  localStorage.setItem('co_user_pin',hp);localStorage.setItem('co_user_q',q);localStorage.setItem('co_user_ans',ha);
+  savedPin=hp;savedAns=ha;isSettingUp=false;clearFails();playBeep();
   g('loginScreen').style.display='none';loginMode='login';showMessage(Tx("Setup completed successfully!"),true);
  }else{
-  if(pin===savedPin){playBeep();g('loginScreen').style.display='none';g('pinInput').value='';g('statusMsg').style.display='none';}
-  else{showMessage(Tx("Wrong PIN! Try again."),false);g('pinInput').value='';}
+  if(await checkSecret(pin,savedPin)){
+   clearFails();
+   if(savedPin.indexOf('h1:')!==0){savedPin=await hashSecret(pin);localStorage.setItem('co_user_pin',savedPin);}
+   if(savedAns&&savedAns.indexOf('h1:')!==0){savedAns=await hashSecret(savedAns);localStorage.setItem('co_user_ans',savedAns);}
+   playBeep();g('loginScreen').style.display='none';g('pinInput').value='';g('statusMsg').style.display='none';
+  }else{registerFail();const m=lockLeftMin();showMessage(m?Tx("Too many wrong attempts. Try again in {m} min.",{m:m}):Tx("Wrong PIN! Try again."),false);g('pinInput').value='';}
  }
+ }finally{_loginBusy=false;}
 }
 function handleLogout(){
  const g=id=>document.getElementById(id);
