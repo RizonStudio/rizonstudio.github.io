@@ -1,7 +1,7 @@
 // Expeniq service worker
 // Network-first: when online you always get the latest files, when offline the cached copy is used.
 // Change CACHE_NAME only if you want to force-clear everything old.
-const CACHE_NAME = 'expeniq-v10';
+const CACHE_NAME = 'expeniq-v11';
 const assetsToCache = [
   './',
   './index.html',
