@@ -4,7 +4,7 @@
 <link rel="manifest" href="./manifest.json">
 <meta charset="UTF-8">
 <meta name="theme-color" content="#047857">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Expeniq: Expense Tracker</title>
 <style>
 :root{--primary:#047857;--bg:#f8fafc;--card:#fff;--text:#1e293b;--income:#16a34a;--expense:#dc2626;--border:#e2e8f0;--loan:#d97706}
@@ -216,6 +216,7 @@ body.dark .acc-hint{background:#2e1065;color:#c4b5fd;border-color:#5b21b6}
 </div>
 <button id="loginBtn" onclick="handleLogin()">Login / Unlock</button>
 <p id="forgotPinLink" style="font-size:.8rem;color:var(--primary);margin-top:10px;cursor:pointer;text-decoration:underline" onclick="showForgotPin()">Forgot PIN?</p>
+<p id="backLoginLink" style="display:none;font-size:.8rem;color:var(--primary);margin-top:10px;cursor:pointer;text-decoration:underline" onclick="handleLogout()">← Back</p>
 <p style="font-size:.78rem;color:#64748b;margin-top:10px;cursor:pointer;text-decoration:underline" onclick="openPrivacy()" id="privLinkLogin">🔒 Privacy Policy</p>
 </div></div>
 
@@ -354,6 +355,7 @@ let lang=localStorage.getItem('co_lang')||'en';
 let soundEnabled=localStorage.getItem('co_sound')!=='false';
 let savedPin=localStorage.getItem('co_user_pin');
 let savedAns=localStorage.getItem('co_user_ans');
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
 /* PIN / answer are stored as salted SHA-256 hashes ("h1:salt:hex"). Old plain-text values are accepted once and upgraded on next successful login. */
 async function _hash(val,salt){
  const str=salt+':'+val;
@@ -658,6 +660,8 @@ const UI={
 [`Please provide a security answer!`]:[`ഒരു സുരക്ഷാ ഉത്തരം നൽകുക!`,`कृपया सुरक्षा उत्तर दें!`,`பாதுகாப்பு பதிலை வழங்கவும்!`,`يرجى إدخال إجابة الأمان!`,`¡Escribe una respuesta de seguridad!`,`Veuillez saisir une réponse de sécurité !`,`Bitte gib eine Sicherheitsantwort ein!`],
 [`Setup completed successfully!`]:[`സെറ്റപ്പ് വിജയകരമായി പൂർത്തിയായി!`,`सेटअप सफलतापूर्वक पूरा हुआ!`,`அமைப்பு வெற்றிகரமாக முடிந்தது!`,`اكتمل الإعداد بنجاح!`,`¡Configuración completada!`,`Configuration terminée !`,`Einrichtung abgeschlossen!`],
 [`Too many wrong attempts. Try again in {m} min.`]:[`കൂടുതൽ തെറ്റായ ശ്രമങ്ങൾ. {m} മിനിറ്റ് കഴിഞ്ഞ് ശ്രമിക്കുക.`,`बहुत ज़्यादा गलत प्रयास। {m} मिनट बाद फिर कोशिश करें।`,`அதிக தவறான முயற்சிகள். {m} நிமிடம் கழித்து முயற்சிக்கவும்.`,`محاولات خاطئة كثيرة. حاول مرة أخرى بعد {m} دقيقة.`,`Demasiados intentos fallidos. Inténtalo de nuevo en {m} min.`,`Trop de tentatives échouées. Réessayez dans {m} min.`,`Zu viele Fehlversuche. Versuche es in {m} Min. erneut.`],
+[`← Back`]:[`← തിരികെ`,`← वापस`,`← பின்செல்`,`← رجوع`,`← Volver`,`← Retour`,`← Zurück`],
+[`Not possible: the due on "{name}" would go below zero. First delete the related bill payment, or correct the card due.`]:[`ചെയ്യാൻ പറ്റില്ല: "{name}" കാർഡിലെ അടയ്ക്കാനുള്ള തുക പൂജ്യത്തിൽ താഴെയാകും. ആദ്യം ബന്ധപ്പെട്ട ബിൽ അടവ് ഡിലീറ്റ് ചെയ്യുക, അല്ലെങ്കിൽ കാർഡിലെ തുക തിരുത്തുക.`,`संभव नहीं: "{name}" की बकाया राशि शून्य से कम हो जाएगी। पहले संबंधित बिल भुगतान हटाएँ, या कार्ड की बकाया राशि सही करें।`,`முடியாது: "{name}" கார்டின் செலுத்த வேண்டிய தொகை பூஜ்யத்திற்குக் கீழே செல்லும். முதலில் தொடர்புடைய பில் செலுத்தலை நீக்கவும், அல்லது கார்டு நிலுவையைத் திருத்தவும்.`,`غير ممكن: المبلغ المستحق على "{name}" سينخفض إلى أقل من الصفر. احذف أولاً دفعة الفاتورة المرتبطة أو صحّح المبلغ المستحق على البطاقة.`,`No es posible: la deuda de "{name}" quedaría por debajo de cero. Primero elimina el pago de factura relacionado o corrige la deuda de la tarjeta.`,`Impossible : le solde dû de "{name}" passerait sous zéro. Supprimez d'abord le paiement de facture associé ou corrigez le solde de la carte.`,`Nicht möglich: der Betrag bei "{name}" würde unter null fallen. Lösche zuerst die zugehörige Rechnungszahlung oder korrigiere den Kartenbetrag.`],
 [`Wrong PIN! Try again.`]:[`തെറ്റായ PIN! വീണ്ടും ശ്രമിക്കുക.`,`गलत PIN! फिर कोशिश करें।`,`தவறான PIN! மீண்டும் முயற்சிக்கவும்.`,`PIN خاطئ! حاول مرة أخرى.`,`¡PIN incorrecto! Inténtalo de nuevo.`,`PIN incorrect ! Réessayez.`,`Falsche PIN! Versuche es erneut.`],
 [`Please enter a valid amount!`]:[`ശരിയായ തുക നൽകുക!`,`कृपया सही राशि दर्ज करें!`,`சரியான தொகையை உள்ளிடவும்!`,`أدخل مبلغاً صحيحاً!`,`¡Ingresa un monto válido!`,`Entrez un montant valide !`,`Bitte gültigen Betrag eingeben!`],
 [`Please enter Bank or Account Name!`]:[`ബാങ്ക് / അക്കൗണ്ട് പേര് നൽകുക!`,`कृपया बैंक या खाते का नाम दर्ज करें!`,`வங்கி அல்லது கணக்கு பெயரை உள்ளிடவும்!`,`أدخل اسم البنك أو الحساب!`,`¡Ingresa el nombre del banco o cuenta!`,`Entrez le nom de la banque ou du compte !`,`Bitte Bank- oder Kontonamen eingeben!`],
@@ -836,6 +840,19 @@ function negCheck(ops){
  }
  return null;
 }
+/* ops as in negCheck. Returns a message if removing/changing entries would push a card due below zero */
+function cardCheck(ops){
+ const sum={};
+ ops.forEach(o=>{sum[o[0]]=(sum[o[0]]||0)+o[1];});
+ for(const a in sum){
+  const c=creditOf(a);if(!c)continue;
+  const nd=r2(c.amount-sum[a]);
+  if(nd<0&&nd<c.amount){
+   return Tx('Not possible: the due on "{name}" would go below zero. First delete the related bill payment, or correct the card due.',{name:c.name});
+  }
+ }
+ return null;
+}
 let lastFixed=[];
 /* No balance may ever be below zero: raise any negative one back to 0 */
 function fixNeg(){
@@ -851,11 +868,9 @@ function availFor(accId,o){
  if(o&&(o.acc||'cash')===accId)bal-=txDelta(o);
  return Math.max(0,r2(bal));
 }
-/* replace an existing transaction; if removing the old one would leave its account below zero, that account is reset to 0 first */
+/* replace an existing transaction (addTransaction has already checked the final balances) */
 function editTxnApply(o,vals){
- const oldAcc=o.acc||'cash';
- if(BI[oldAcc]){const b1=calcTotals()[oldAcc]-txDelta(o);if(b1<0)db[BI[oldAcc].k]=r2(db[BI[oldAcc].k]-b1);}
- else{applyEffect(o,-1);const bk=db.banks.find(x=>x.id===oldAcc);if(bk&&bk.bal<0)bk.bal=0;const ck=creditOf(oldAcc);if(ck&&ck.amount<0)ck.amount=0;}
+ applyEffect(o,-1);
  Object.assign(o,vals);applyEffect(o,1);
 }
 function negMsg(key,bad){return L(key).replace('{name}',bad.name).replace('{bal}',currency+bad.bal.toFixed(2));}
@@ -1031,6 +1046,7 @@ function showForgotPin(){
  g('pinInput').style.display='none';g('confirmPinDiv').style.display='none';
  g('setupSecQDiv').style.display='block';g('secQuestion').style.display='none';
  g('forgotPinLink').style.display='none';g('statusMsg').style.display='none';
+ g('backLoginLink').style.display='block';
 }
 let _loginBusy=false;
 async function handleLogin(){
@@ -1042,7 +1058,7 @@ async function handleLogin(){
  if(isRecovering){
   const a=g('secAnswerInput').value.trim().toLowerCase();
   if(await checkSecret(a,savedAns)){
-   clearFails();
+   clearFails();g('backLoginLink').style.display='none';
    showMessage(Tx("Security Answer verified! Now set new PIN."),true);
    isRecovering=false;isSettingUp=true;
    loginMode='reset';renderLoginTexts();
@@ -1075,7 +1091,7 @@ function handleLogout(){
  const g=id=>document.getElementById(id);
  g('pinInput').value='';g('confirmPinInput').value='';g('secAnswerInput').value='';
  g('pinInput').style.display='block';g('confirmPinDiv').style.display='none';g('setupSecQDiv').style.display='none';
- loginMode='login';renderLoginTexts();g('forgotPinLink').style.display='block';g('statusMsg').style.display='none';
+ loginMode='login';renderLoginTexts();g('forgotPinLink').style.display='block';g('backLoginLink').style.display='none';g('statusMsg').style.display='none';
  isSettingUp=false;isRecovering=false;g('loginScreen').style.display='flex';
 }
 function saveData(){
@@ -1094,8 +1110,11 @@ function addTransaction(){
  const acc=document.getElementById('txnAcc').value||'cash',mode=document.getElementById('txnMode').value;
  const isEditNow=editIdx!==null&&!!db.txns[editIdx];
  let bad=null;
- if(isEditNow){const av=availFor(acc,db.txns[editIdx]);if(av!==undefined&&type==='expense'&&av-amount<0)bad={name:accDisplay(acc),bal:av};}
- else bad=negCheck([[acc,txDelta({type,amount})]]);
+ const ops=[[acc,txDelta({type,amount})]];
+ if(isEditNow){const o=db.txns[editIdx];ops.push([o.acc||'cash',-txDelta(o)]);}
+ bad=negCheck(ops);
+ const cm=isEditNow?cardCheck(ops):null;
+ if(!bad&&cm){showFieldError('txnError',cm,false,7000);return;}
  if(bad){showFieldError('txnError',negMsg('negBlock',bad),false,7000);return;}
  const crd=creditOf(acc);
  if(crd&&type==='income'){let base=crd.amount;if(isEditNow&&db.txns[editIdx].acc===acc)base-=creditDelta(db.txns[editIdx]);base=Math.max(0,base);if(amount>base){showFieldError('txnError',L('refundTooMuch').replace('{due}',currency+base.toFixed(2)),false,7000);return;}}
@@ -1108,7 +1127,7 @@ function addTransaction(){
 }
 function editTxn(i){
  const t=db.txns[i];if(!t)return;
- if(t.ref&&/^(pay|xf):/.test(String(t.ref))){showFieldError('txnError',L('noEditBill'),false,5000);return;}
+ if(t.ref&&/^(pay|xf|loans|receivables):/.test(String(t.ref))){showFieldError('txnError',L('noEditBill'),false,5000);return;}
  editIdx=i;
  document.getElementById('txnCategory').value=t.category;
  document.getElementById('txnDesc').value=t.desc;
@@ -1181,6 +1200,8 @@ function toggleDone(type,i){
  if(!it.done){openSettle(type,i);return;}
  const k=type+':'+it.id,ti=db.txns.findIndex(t=>t.ref===k);
  if(ti>=0){
+  const x=db.txns[ti],bad=negCheck([[x.acc||'cash',-txDelta(x)]]);
+  if(bad){showFieldError(type==='loans'?'loanError':'recError',negMsg('negDel',bad),false,6000);return;}
   if(editIdx!==null){if(ti===editIdx)cancelEdit(true);else if(ti<editIdx)editIdx--;}
   applyEffect(db.txns[ti],-1);db.txns.splice(ti,1);
  }
@@ -1190,6 +1211,10 @@ function toggleDone(type,i){
 }
 const DEL_DEFAULT='Are you sure you want to remove this? This action cannot be undone.';
 function deleteItem(type,index){
+ if(type==='txns'){const t0=db.txns[index];
+  if(t0){const grp=String(t0.ref||'').startsWith('xf:')?db.txns.filter(x=>x.ref===t0.ref):[t0];
+   const ops=grp.map(x=>[x.acc||'cash',-txDelta(x)]),bad=negCheck(ops),cm=cardCheck(ops);
+   if(bad||cm){showFieldError('txnError',bad?negMsg('negDel',bad):cm,false,7000);return;}}}
  deleteTargetType=type;deleteTargetIndex=index;
  let msg=Tx(DEL_DEFAULT);
  if(type==='banks'&&db.banks[index]){
@@ -1206,7 +1231,10 @@ function closeModal(ok){
   let pairIdx=-1;
   if(deleteTargetType==='txns'){const dt=db.txns[deleteTargetIndex];applyEffect(dt,-1);
    if(dt&&dt.ref&&String(dt.ref).indexOf('xf:')===0){pairIdx=db.txns.findIndex((x,k)=>k!==deleteTargetIndex&&x.ref===dt.ref);if(pairIdx>=0)applyEffect(db.txns[pairIdx],-1);}
-   if(dt&&dt.ref&&String(dt.ref).indexOf('pay:')===0){const cl=db.loans.find(l=>l.id===String(dt.ref).slice(4));if(cl)cl.amount=r2(cl.amount+dt.amount);}}
+   if(dt&&dt.ref&&String(dt.ref).indexOf('pay:')===0){const cl=db.loans.find(l=>l.id===String(dt.ref).slice(4));if(cl)cl.amount=r2(cl.amount+dt.amount);}
+   const sm=/^(loans|receivables):(.+)$/.exec((dt&&dt.ref)||'');
+   if(sm){const it=db[sm[1]].find(x=>x.id===sm[2]);if(it){it.done=false;delete it.sacc;}}}
+  if(deleteTargetType==='loans'){const cd=db.loans[deleteTargetIndex];if(cd&&cd.kind==='credit')db.txns.forEach(t=>{if(t.acc==='c:'+cd.id)t.accLabel=cd.name;});}
   if(deleteTargetType==='banks'){const bk=db.banks[deleteTargetIndex];if(bk)db.txns.forEach(t=>{if(t.acc===bk.id)t.accLabel=bk.name;});}
   db[deleteTargetType].splice(deleteTargetIndex,1);
   if(pairIdx>=0)db.txns.splice(pairIdx>deleteTargetIndex?pairIdx-1:pairIdx,1);
@@ -1264,7 +1292,7 @@ function renderReport(){
  document.getElementById('repInc').innerText=currency+inc.toFixed(2);
  document.getElementById('repExp').innerText=currency+exp.toFixed(2);
  const rows=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
- document.getElementById('repCats').innerHTML=rows.length?rows.map(([c,v])=>`<div class="bar-row"><div style="display:flex;justify-content:space-between"><span>${esc(catName(c))}</span><b>${currency}${v.toFixed(2)} (${(v/exp*100).toFixed(0)}%)</b></div><div class="bar" style="width:${(v/rows[0][1]*100).toFixed(0)}%"></div></div>`).join(''):'<p style="font-size:.85rem;color:#64748b">No expenses this month.</p>';
+ document.getElementById('repCats').innerHTML=rows.length?rows.map(([c,v])=>`<div class="bar-row"><div style="display:flex;justify-content:space-between"><span>${esc(catName(c))}</span><b>${currency}${v.toFixed(2)} (${(v/exp*100).toFixed(0)}%)</b></div><div class="bar" style="width:${(v/rows[0][1]*100).toFixed(0)}%"></div></div>`).join(''):'<p style="font-size:.85rem;color:#64748b">'+esc(Tx('No expenses this month.'))+'</p>';
  const mx=Math.max(1,...Object.values(tr).map(x=>Math.max(x.i,x.e)));
  document.getElementById('repTrend').innerHTML=Object.entries(tr).map(([k,v])=>`<div><div class="pair"><i style="height:${v.i/mx*100}%;background:var(--income)"></i><i style="height:${v.e/mx*100}%;background:var(--expense)"></i></div>${k.slice(5)}/${k.slice(2,4)}</div>`).join('');
 }
@@ -1324,9 +1352,11 @@ async function copyBackup(){
  showFieldError('repMsg',m('copied'),true,6000);
 }
 function exportCSV(){
- const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
- const rows=[['Date','Category','Description','Type','Amount']].concat(db.txns.map(t=>[tDate(t).toISOString().slice(0,10),t.category,t.desc,t.type,t.amount]));
- const stamp=new Date().toISOString().slice(0,10);
+ const q=v=>{let s=String(v);if(typeof v==='string'&&/^[=+\-@\t\r]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';};
+ const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+ const isXf=t=>t.xfer||(t.ref&&/^(pay|xf):/.test(String(t.ref)));
+ const rows=[['Date','Category','Description','Type','Amount','Account']].concat(db.txns.map(t=>[ymd(tDate(t)),t.category,t.desc,isXf(t)?'transfer':t.type,t.amount,accName(t)]));
+ const stamp=ymd(new Date());
  saveFile(`expeniq-transactions-${stamp}.csv`,'\ufeff'+rows.map(r=>r.map(q).join(',')).join('\n'),'text/csv').then(r=>{
   if(r==='cancel')return;
   showFieldError('repMsg',r==='shared'?m('csvShare'):m('csvDl'),r!=='failed',6000);
@@ -1341,7 +1371,7 @@ function parseBackup(text){
  return{
   currency:o.currency,
   db:{
-   txns:arr(d.txns).map(t=>({category:String(t.category||'General'),desc:String(t.desc||''),amount:num(t.amount),type:t.type==='income'?'income':'expense',acc:(t.acc&&t.acc!=='none'&&t.acc!=='upi'&&t.acc!=='card')?String(t.acc):'cash',mode:t.mode?String(t.mode):(t.acc==='upi'?'UPI':t.acc==='card'?'Card':''),date:t.date?String(t.date):'',ts:typeof t.ts==='number'?t.ts:undefined,ref:t.ref?String(t.ref):undefined,xfer:t.xfer?true:undefined})),
+   txns:arr(d.txns).map(t=>({category:String(t.category||'General'),desc:String(t.desc||''),amount:num(t.amount),type:t.type==='income'?'income':'expense',acc:(t.acc&&t.acc!=='none'&&t.acc!=='upi'&&t.acc!=='card')?String(t.acc):'cash',mode:t.mode?String(t.mode):(t.acc==='upi'?'UPI':t.acc==='card'?'Card':''),date:t.date?String(t.date):'',ts:typeof t.ts==='number'?t.ts:undefined,ref:t.ref?String(t.ref):undefined,accLabel:t.accLabel?String(t.accLabel):undefined,xfer:t.xfer?true:undefined})),
    banks:arr(d.banks).map(b=>({id:b.id?String(b.id):genId(),name:String(b.name||''),bal:num(b.bal),type:b.type||'bank'})),
    loans:arr(d.loans).map(l=>({id:l.id?String(l.id):genId(),name:String(l.name||''),amount:num(l.amount),date:String(l.date||''),done:!!l.done,sacc:l.sacc?String(l.sacc):undefined,kind:l.kind==='credit'?'credit':undefined})),
    receivables:arr(d.receivables).map(r=>({id:r.id?String(r.id):genId(),name:String(r.name||''),amount:num(r.amount),done:!!r.done,sacc:r.sacc?String(r.sacc):undefined})),
@@ -1356,7 +1386,7 @@ function applyImport(text){
  const n=parsed.db;
  askConfirm(m('confirmImport',n),()=>{
   db=n;
-  if(parsed.currency){currency=parsed.currency;localStorage.setItem('co_curr',currency);document.getElementById('currencySelect').value=currency;}
+  if(parsed.currency&&[...document.getElementById('currencySelect').options].some(o=>o.value===parsed.currency)){currency=parsed.currency;localStorage.setItem('co_curr',currency);document.getElementById('currencySelect').value=currency;}
   saveData();
   document.getElementById('importText').value='';
   showFieldError('repMsg',m('restored'),true,5000);
